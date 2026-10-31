@@ -1,0 +1,126 @@
+name: "Release"
+
+on: workflow_dispatch
+
+jobs:
+  create-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    outputs:
+      release-id: ${{ steps.create-release.outputs.result }}
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Get version from tauri.conf.json
+        id: get-version
+        shell: bash
+        run: |
+          VERSION=$(grep -o '"version": "[^"]*"' src-tauri/tauri.conf.json | cut -d'"' -f4)
+          echo "Application version from tauri.conf.json: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create Draft Release
+        id: create-release
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `v${{ steps.get-version.outputs.version }}`,
+              name: `Voxflow ${{ steps.get-version.outputs.version }} installers`,
+              body: [
+                '## Download the installer for your system',
+                '',
+                '| System | File |',
+                '|---|---|',
+                '| Mac with an M1, M2, M3 or newer chip | `Voxflow_..._Mac_Apple-Silicon.dmg` |',
+                '| Mac with an Intel chip | `Voxflow_..._Mac_Intel.dmg` |',
+                '| Windows | `.exe` ending in `x64-setup` |',
+                '| Windows on ARM | `.exe` ending in `arm64-setup` |',
+                '| Ubuntu, Debian, Mint | `.deb` |',
+                '| Fedora | `.rpm` |',
+                '| Any Linux | `.AppImage` |',
+                '',
+                'Open the **Assets** list below to find them. Your computer will warn you the first time you open Voxflow because it is not signed with a paid certificate; the steps to get past that are in the [README](https://github.com/reachneoagent-commits/voxflow#download-and-install).',
+              ].join('\n'),
+              draft: true,
+              prerelease: false,
+              generate_release_notes: false
+            })
+            return data.id
+
+  publish-tauri:
+    permissions:
+      contents: write
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-26" # for Arm based macs (M1 and above). Uses macOS 26 for Apple Intelligence SDK.
+            args: "--target aarch64-apple-darwin"
+            target: "aarch64-apple-darwin"
+          - platform: "macos-latest" # for Intel based macs.
+            args: "--target x86_64-apple-darwin"
+            target: "x86_64-apple-darwin"
+          - platform: "ubuntu-22.04" # Build .deb on 22.04
+            args: "--bundles deb"
+            target: "x86_64-unknown-linux-gnu"
+          - platform: "ubuntu-24.04" # Build AppImage and RPM on 24.04
+            args: "--bundles appimage,rpm"
+            target: "x86_64-unknown-linux-gnu"
+          - platform: "ubuntu-24.04-arm" # Build for ARM64 Linux
+            args: "--bundles appimage,deb,rpm"
+            target: "aarch64-unknown-linux-gnu"
+          - platform: "windows-latest"
+            args: ""
+            target: "x86_64-pc-windows-msvc"
+          - platform: "windows-11-arm" # for ARM64 Windows runner
+            args: "--target aarch64-pc-windows-msvc"
+            target: "aarch64-pc-windows-msvc"
+
+    uses: ./.github/workflows/build.yml
+    with:
+      platform: ${{ matrix.platform }}
+      target: ${{ matrix.target }}
+      build-args: ${{ matrix.args }}
+      sign-binaries: false
+      asset-prefix: "voxflow"
+      upload-artifacts: false
+      release-id: ${{ needs.create-release.outputs.release-id }}
+      # Releases always build from scratch — never restore the Rust cache, so a
+      # stale cached native lib can never be linked into a shipped artifact.
+      no-cache: true
+    secrets: inherit
+
+  # The Mac installers come out of the build named after processor types
+  # (aarch64, x64). Rename them to plain names. Only the .dmg files are renamed:
+  # the updater's manifest points at the other files by their original names.
+  name-installers:
+    permissions:
+      contents: write
+    needs: [create-release, publish-tauri]
+    if: ${{ always() && needs.create-release.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Give the Mac installers clear names
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RELEASE_ID: ${{ needs.create-release.outputs.release-id }}
+          VERSION: ${{ needs.create-release.outputs.version }}
+        run: |
+          gh api "repos/$REPO/releases/$RELEASE_ID/assets" --paginate --jq '.[] | "\(.id) \(.name)"' |
+          while read -r id name; do
+            case "$name" in
+              *_aarch64.dmg) new="Voxflow_${VERSION}_Mac_Apple-Silicon.dmg" ;;
+              *_x64.dmg) new="Voxflow_${VERSION}_Mac_Intel.dmg" ;;
+              *) continue ;;
+            esac
+            gh api -X PATCH "repos/$REPO/releases/assets/$id" -f name="$new" > /dev/null
+            echo "$name -> $new"
+          done

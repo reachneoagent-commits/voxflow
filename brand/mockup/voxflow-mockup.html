@@ -1,0 +1,1751 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voxflow UI Mockup</title>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("../../src/assets/fonts/inter/Inter_18pt-Regular.ttf");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("../../src/assets/fonts/inter/Inter_18pt-Medium.ttf");
+        font-weight: 500;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("../../src/assets/fonts/inter/Inter_18pt-SemiBold.ttf");
+        font-weight: 600;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("../../src/assets/fonts/inter/Inter_18pt-Bold.ttf");
+        font-weight: 700;
+      }
+
+      /* Tokens mirror src/styles/theme.css (Voxflow structure, Voxflow brand) */
+      :root {
+        --text: #0f0f0f;
+        --bg: #fbfbfb;
+        --primary: #332d51;
+        --on-primary: #fbfbfb;
+        --accent: #a695f8;
+        --moss: #2f7d5b;
+        --warn: #b45309;
+        --err: #dc2626;
+        --mid: #808080;
+        --canvas: #332d51;
+        --on-canvas: #fbfbfb;
+        --ink2: color-mix(in srgb, var(--text) 60%, transparent);
+        --ink3: color-mix(in srgb, var(--text) 58%, var(--bg));
+        --line: color-mix(in srgb, var(--mid) 20%, transparent);
+        --line-strong: color-mix(in srgb, var(--mid) 80%, transparent);
+        --wash: color-mix(in srgb, var(--mid) 10%, transparent);
+        --accent-soft: color-mix(in srgb, var(--accent) 22%, transparent);
+        --moss-wash: color-mix(in srgb, var(--moss) 12%, var(--bg));
+      }
+      :root[data-theme="dark"] {
+        --text: #fbfbfb;
+        --bg: #1b1727;
+        --primary: #a695f8;
+        --on-primary: #1b1a2b;
+        --accent: #a695f8;
+        --moss: #86c9a4;
+        --canvas: #110e19;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background: var(--canvas);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 24px 16px 64px;
+        -webkit-font-smoothing: antialiased;
+      }
+      .bar {
+        max-width: 880px;
+        margin: 0 auto 16px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .bar h1 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-right: auto;
+        color: var(--on-canvas);
+      }
+      .bar button,
+      .pill-btn {
+        font: 500 13px "Inter";
+        border: 1px solid transparent;
+        background: color-mix(in srgb, #fbfbfb 12%, transparent);
+        color: var(--on-canvas);
+        border-radius: 10px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      .bar button.on {
+        background: var(--accent);
+        color: #1b1a2b;
+        border-color: var(--accent);
+      }
+      .brandsheet {
+        max-width: 880px;
+        margin: 40px auto 0;
+        color: var(--on-canvas);
+      }
+      .brandsheet h2 {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 28px 0 12px;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 12px;
+      }
+      .hero > div {
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        padding: 28px;
+        min-height: 190px;
+      }
+      .hero svg {
+        width: 100%;
+        max-width: 260px;
+        height: auto;
+      }
+      .logos {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .logos > div {
+        border-radius: 12px;
+        height: 96px;
+        display: grid;
+        place-items: center;
+      }
+      .logos svg {
+        width: 78px;
+        height: auto;
+      }
+      .sw5 {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+      }
+      .sw5 > div {
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        box-shadow: 0 0 0 1px #fbfbfb40;
+      }
+      @media (max-width: 760px) {
+        .win {
+          overflow-x: auto;
+        }
+        .main {
+          min-width: 700px;
+        }
+        .hero,
+        .ovgrid {
+          grid-template-columns: 1fr;
+        }
+        .logos,
+        .status {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .sw5 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .sw5 i {
+        display: block;
+        height: 84px;
+      }
+      .sw5 span {
+        display: block;
+        padding: 8px 10px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .sw5 b {
+        font-weight: 600;
+        display: block;
+        font-size: 13px;
+      }
+      .status {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .status > div {
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .status i {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+      }
+      .type {
+        background: var(--bg);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 20px 24px;
+      }
+      .type .big {
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .type .w {
+        display: flex;
+        gap: 18px;
+        font-size: 15px;
+        margin-top: 8px;
+        color: var(--ink2);
+      }
+      .type .w b {
+        color: var(--text);
+      }
+      .uikit {
+        background: var(--bg);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      /* App window */
+      .win {
+        max-width: 880px;
+        height: 600px;
+        margin: 0 auto;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 20px 50px -20px rgba(15, 15, 15, 0.35);
+      }
+      .titlebar {
+        height: 28px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .titlebar i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--line-strong);
+        opacity: 0.5;
+      }
+      .main {
+        flex: 1;
+        display: flex;
+        min-height: 0;
+      }
+      .side {
+        width: 176px;
+        border-right: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 8px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 16px 4px 14px;
+        color: var(--primary);
+      }
+      .brand svg {
+        width: 34px;
+        height: auto;
+        fill: currentColor;
+      }
+      .brand b {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+      .nav {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        opacity: 0.85;
+        transition: background 0.15s;
+        position: relative;
+      }
+      .nav a:hover {
+        background: var(--line);
+        opacity: 1;
+      }
+      .nav a.active {
+        background: var(--primary);
+        color: var(--on-primary);
+        opacity: 1;
+      }
+      .nav svg {
+        width: 20px;
+        height: 20px;
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .nav .new::after {
+        content: "NEW";
+        margin-left: auto;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        background: var(--accent);
+        color: #1b1a2b;
+        border-radius: 5px;
+        padding: 1px 5px;
+      }
+      .nav .sep {
+        height: 1px;
+        background: var(--line);
+        margin: 6px 0;
+      }
+      .content {
+        flex: 1;
+        overflow: auto;
+        padding: 20px;
+      }
+      .page {
+        display: none;
+        max-width: 672px;
+        margin: 0 auto;
+      }
+      .page.show {
+        display: block;
+      }
+      .group {
+        margin-bottom: 22px;
+      }
+      .group h2 {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--ink3);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0 16px;
+        margin-bottom: 8px;
+      }
+      .group .sub {
+        font-size: 12px;
+        color: var(--ink3);
+        padding: 0 16px;
+        margin: -4px 0 8px;
+      }
+      .card {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 48px;
+        padding: 8px 16px;
+        border-top: 1px solid var(--line);
+      }
+      .row:first-child {
+        border-top: 0;
+      }
+      .row h3 {
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .row p {
+        font-size: 12px;
+        color: var(--ink2);
+        margin-top: 2px;
+      }
+      .info {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        border: 1px solid var(--line-strong);
+        color: var(--ink3);
+        font-size: 10px;
+        display: inline-grid;
+        place-items: center;
+      }
+      .keys {
+        display: flex;
+        gap: 4px;
+      }
+      kbd {
+        font: 600 12px "Inter";
+        min-width: 26px;
+        text-align: center;
+        padding: 4px 8px;
+        border-radius: 8px;
+        border: 1px solid var(--line-strong);
+        border-bottom-width: 2px;
+        background: var(--bg);
+        color: var(--primary);
+      }
+      :root[data-theme="dark"] kbd {
+        color: var(--text);
+      }
+      .select {
+        font: 400 13px "Inter";
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        padding: 6px 28px 6px 10px;
+        background: var(--bg);
+        position: relative;
+        min-width: 150px;
+      }
+      .select::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        width: 6px;
+        height: 6px;
+        border: solid var(--ink3);
+        border-width: 0 1.5px 1.5px 0;
+        transform: translateY(-70%) rotate(45deg);
+      }
+      .sw {
+        width: 44px;
+        height: 24px;
+        border-radius: 99px;
+        background: var(--line-strong);
+        border: 1px solid var(--ink3);
+        position: relative;
+        flex: none;
+      }
+      .sw::after {
+        content: "";
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        transition: 0.2s;
+      }
+      .sw.on {
+        background: var(--accent);
+        border-color: var(--primary);
+      }
+      .sw.on::after {
+        transform: translateX(20px);
+      }
+      .slider {
+        width: 150px;
+        height: 4px;
+        border-radius: 9px;
+        background: var(--line-strong);
+        position: relative;
+      }
+      .slider::before {
+        content: "";
+        position: absolute;
+        inset: 0 40% 0 0;
+        background: var(--primary);
+        border-radius: 9px;
+      }
+      .slider::after {
+        content: "";
+        position: absolute;
+        left: 60%;
+        top: 50%;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 2px solid var(--primary);
+        transform: translate(-50%, -50%);
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 99px;
+        background: var(--accent-soft);
+      }
+      .chip.moss {
+        background: var(--moss-wash);
+        color: var(--moss);
+      }
+      .btn {
+        font: 500 13px "Inter";
+        border-radius: 8px;
+        border: 1px solid var(--primary);
+        background: var(--primary);
+        color: var(--on-primary);
+        padding: 7px 14px;
+        cursor: pointer;
+      }
+      .btn.sec {
+        background: var(--accent-soft);
+        border-color: transparent;
+        color: var(--text);
+      }
+      .btn.ghost {
+        background: var(--bg);
+        border-color: var(--line-strong);
+        color: var(--text);
+      }
+      .input {
+        font: 400 13px "Inter";
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        padding: 7px 10px;
+        background: var(--bg);
+        color: var(--ink3);
+        flex: 1;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        align-items: center;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 12px;
+      }
+      .tabs span {
+        font-size: 13px;
+        font-weight: 500;
+        padding: 5px 12px;
+        border-radius: 8px;
+        color: var(--ink2);
+      }
+      .tabs .a {
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+      .mono {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 12px;
+      }
+      .arrow {
+        color: var(--ink3);
+        margin: 0 8px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px 14px;
+      }
+      .stat b {
+        display: block;
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .stat span {
+        font-size: 12px;
+        color: var(--ink2);
+      }
+      .hist {
+        padding: 12px 16px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .hist:first-child {
+        border-top: 0;
+      }
+      .hist time {
+        font-size: 12px;
+        color: var(--ink3);
+        width: 56px;
+        flex: none;
+        padding-top: 1px;
+      }
+      .hist p {
+        font-size: 14px;
+        line-height: 1.45;
+        flex: 1;
+      }
+      .hist .ic {
+        color: var(--ink3);
+        font-size: 12px;
+      }
+      .sty {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+      .sty div {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .sty div.pick {
+        border-color: color-mix(in srgb, var(--primary) 60%, transparent);
+        background: var(--accent-soft);
+      }
+      .sty b {
+        font-size: 14px;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .sty p {
+        font-size: 12px;
+        color: var(--ink2);
+        line-height: 1.45;
+      }
+      .app {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .app .ico {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .foot {
+        border-top: 1px solid var(--line);
+        padding: 10px 16px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--ink2);
+      }
+      .foot .l {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--moss);
+        display: inline-block;
+        margin-right: 6px;
+      }
+
+      /* Overlay pills */
+      .ovs {
+        max-width: 880px;
+        margin: 32px auto 0;
+      }
+      .ovs h2 {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .ovgrid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .stage {
+        height: 130px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #d9d2f5, #f1eefc 55%, #c8bff0);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 14px;
+        position: relative;
+      }
+      :root[data-theme="dark"] .stage {
+        background: linear-gradient(135deg, #2a2540, #1c1b1a 60%, #3a3160);
+      }
+      .stage small {
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--ink2);
+      }
+      .ov {
+        background: var(--primary);
+        color: var(--on-primary);
+        border-radius: 99px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 16px;
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+          0 10px 26px -10px rgba(0, 0, 0, 0.45);
+      }
+      :root[data-theme="dark"] .ov {
+        background: #1d1a2e;
+        color: var(--text);
+      }
+      .bars {
+        display: flex;
+        gap: 3px;
+        align-items: center;
+        height: 18px;
+      }
+      .bars i {
+        width: 3px;
+        border-radius: 3px;
+        background: var(--accent);
+      }
+      .live {
+        background: var(--primary);
+        color: var(--on-primary);
+        border-radius: 18px;
+        width: 100%;
+        max-width: 260px;
+        padding: 10px 14px;
+        font-size: 12px;
+        line-height: 1.45;
+        box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.45);
+      }
+      :root[data-theme="dark"] .live {
+        background: #1d1a2e;
+        color: var(--text);
+      }
+      .live .h {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+      .opts {
+        max-width: 880px;
+        margin: 32px auto 0;
+        color: var(--on-canvas);
+      }
+      .opts h2 {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .opts > p {
+        font-size: 12px;
+        opacity: 0.75;
+        margin-bottom: 12px;
+      }
+      .optgrid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .mini {
+        --text: #fbfbfb;
+        --primary: #a695f8;
+        --on-primary: #1b1a2b;
+        --accent: #a695f8;
+        --mid: #808080;
+        --ink2: color-mix(in srgb, var(--text) 60%, transparent);
+        --ink3: color-mix(in srgb, var(--text) 58%, var(--bg));
+        --line: color-mix(in srgb, #808080 20%, transparent);
+        --line-strong: color-mix(in srgb, #808080 80%, transparent);
+        --wash: color-mix(in srgb, #808080 10%, transparent);
+        --accent-soft: color-mix(in srgb, #a695f8 22%, transparent);
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .mini .mt {
+        display: flex;
+        gap: 5px;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--line);
+      }
+      .mini .mt i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--line-strong);
+        opacity: 0.5;
+      }
+      .mini .mb {
+        display: flex;
+        min-height: 208px;
+      }
+      .mini .ms {
+        width: 84px;
+        border-right: 1px solid var(--line);
+        padding: 8px 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .mini .ms b {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        margin: 2px 2px 8px;
+        color: var(--primary);
+      }
+      .mini .ms b svg {
+        width: 18px;
+        fill: currentColor;
+      }
+      .mini .ms span {
+        font-size: 10.5px;
+        font-weight: 500;
+        padding: 5px 6px;
+        border-radius: 6px;
+        opacity: 0.85;
+      }
+      .mini .ms span.a {
+        background: var(--primary);
+        color: var(--on-primary);
+        opacity: 1;
+      }
+      .mini .mc {
+        flex: 1;
+        padding: 10px;
+        min-width: 0;
+      }
+      .mini .mc h4 {
+        font-size: 9px;
+        font-weight: 500;
+        color: var(--ink3);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0 6px 5px;
+      }
+      .mini .card .row {
+        min-height: 34px;
+        padding: 5px 10px;
+      }
+      .mini .card .row h3 {
+        font-size: 11px;
+      }
+      .mini .sw {
+        width: 34px;
+        height: 19px;
+      }
+      .mini .sw::after {
+        width: 15px;
+        height: 15px;
+      }
+      .mini .sw.on::after {
+        transform: translateX(15px);
+      }
+      .mini .mbtn {
+        display: inline-block;
+        margin-top: 10px;
+        font: 500 11px "Inter";
+        background: var(--primary);
+        color: var(--on-primary);
+        border-radius: 7px;
+        padding: 5px 10px;
+      }
+      .mini .cap {
+        padding: 8px 10px;
+        border-top: 1px solid var(--line);
+        font-size: 10.5px;
+        color: var(--ink2);
+        line-height: 1.5;
+      }
+      .mini .cap b {
+        color: var(--text);
+        font-size: 11.5px;
+      }
+      @media (max-width: 760px) {
+        .optgrid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .note {
+        max-width: 880px;
+        margin: 20px auto 0;
+        font-size: 12px;
+        color: color-mix(in srgb, var(--on-canvas) 70%, transparent);
+        line-height: 1.6;
+      }
+      .ovs h2 {
+        color: var(--on-canvas);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <h1>Voxflow — UI mockup (Voxflow layout · Voxflow brand)</h1>
+      <button data-page="general" class="on">General</button>
+      <button data-page="history">History</button>
+      <button data-page="dictionary">Dictionary</button>
+      <button data-page="snippets">Snippets</button>
+      <button data-page="styles">Styles</button>
+      <button id="theme">Dark mode</button>
+    </div>
+
+    <div class="win">
+      <div class="titlebar"><i></i><i></i><i></i></div>
+      <div class="main">
+        <aside class="side">
+          <div class="brand">
+            <svg viewBox="0 0 104.29 52.93">
+              <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+              <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+              <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+              <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+              <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" />
+            </svg>
+            <b>Voxflow</b>
+          </div>
+          <nav class="nav" id="nav"></nav>
+        </aside>
+        <section class="content">
+          <!-- GENERAL -->
+          <div class="page show" id="p-general">
+            <div class="group">
+              <h2>General</h2>
+              <div class="card">
+                <div class="row">
+                  <h3>Transcribe shortcut <span class="info">i</span></h3>
+                  <div class="keys"><kbd>⌥</kbd><kbd>Space</kbd></div>
+                </div>
+                <div class="row">
+                  <h3>Shortcut activation <span class="info">i</span></h3>
+                  <div class="select">Push to talk</div>
+                </div>
+                <div class="row">
+                  <h3>Cancel shortcut <span class="info">i</span></h3>
+                  <div class="keys"><kbd>Esc</kbd></div>
+                </div>
+              </div>
+            </div>
+            <div class="group">
+              <h2>Languages</h2>
+              <div class="card">
+                <div class="row">
+                  <h3>Preferred languages <span class="info">i</span></h3>
+                  <div style="display: flex; gap: 6px">
+                    <span class="chip">English</span
+                    ><span class="chip">Urdu</span
+                    ><span class="chip">+ Add</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="group">
+              <h2>Sound</h2>
+              <div class="card">
+                <div class="row">
+                  <h3>Microphone <span class="info">i</span></h3>
+                  <div class="select">MacBook Pro Microphone</div>
+                </div>
+                <div class="row">
+                  <h3>Mute while recording <span class="info">i</span></h3>
+                  <div class="sw"></div>
+                </div>
+                <div class="row">
+                  <h3>Audio feedback <span class="info">i</span></h3>
+                  <div class="sw on"></div>
+                </div>
+                <div class="row">
+                  <h3>Volume</h3>
+                  <div class="slider"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HISTORY -->
+          <div class="page" id="p-history">
+            <div class="stats">
+              <div class="stat"><b>4,812</b><span>words this week</span></div>
+              <div class="stat"><b>148</b><span>avg words / min</span></div>
+              <div class="stat"><b>1h 42m</b><span>time saved</span></div>
+            </div>
+            <div class="toolbar">
+              <div class="input">Search history…</div>
+              <button class="btn ghost">Transcribe file</button>
+            </div>
+            <div class="group">
+              <h2>Today</h2>
+              <div class="card">
+                <div class="hist">
+                  <time>10:42</time>
+                  <p>
+                    Hey Sarah, can you send over the revised proposal by Friday?
+                    I'd like to review it before the call.
+                  </p>
+                  <span class="ic">⧉ Copy</span>
+                </div>
+                <div class="hist">
+                  <time>10:31</time>
+                  <p>
+                    Remember to add the new snippet for my calendar link and
+                    update the dictionary.
+                  </p>
+                  <span class="ic">⧉ Copy</span>
+                </div>
+                <div class="hist">
+                  <time>09:58</time>
+                  <p>
+                    The build finished successfully, so I'm merging the pull
+                    request now.
+                  </p>
+                  <span class="ic">⧉ Copy</span>
+                </div>
+              </div>
+            </div>
+            <div class="group">
+              <h2>Yesterday</h2>
+              <div class="card">
+                <div class="hist">
+                  <time>17:20</time>
+                  <p>
+                    Thanks everyone for joining. I'll share the notes and next
+                    steps shortly.
+                  </p>
+                  <span class="ic">⧉ Copy</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DICTIONARY -->
+          <div class="page" id="p-dictionary">
+            <div class="toolbar">
+              <div class="input">Add a word or phrase…</div>
+              <button class="btn">Add</button>
+            </div>
+            <div class="tabs">
+              <span class="a">All</span><span>Words</span
+              ><span>Replacements</span><span>Auto-learned</span>
+            </div>
+            <div class="group">
+              <div class="card">
+                <div class="row">
+                  <h3>Voxflow</h3>
+                  <span class="chip">Word</span>
+                </div>
+                <div class="row">
+                  <h3>Parakeet</h3>
+                  <span class="chip moss">Auto-learned</span>
+                </div>
+                <div class="row">
+                  <h3>
+                    <span class="mono">gonna</span><span class="arrow">→</span
+                    ><span class="mono">going to</span>
+                  </h3>
+                  <span class="chip">Replacement</span>
+                </div>
+                <div class="row">
+                  <h3>
+                    <span class="mono">tauri</span><span class="arrow">→</span
+                    ><span class="mono">Tauri</span>
+                  </h3>
+                  <span class="chip">Replacement</span>
+                </div>
+                <div class="row">
+                  <h3>Shahzad</h3>
+                  <span class="chip">Word</span>
+                </div>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--ink3); padding: 0 16px">
+              Words you add are favoured while transcribing. Replacements swap
+              one phrase for another after transcription.
+            </p>
+          </div>
+
+          <!-- SNIPPETS -->
+          <div class="page" id="p-snippets">
+            <div class="toolbar">
+              <div class="input">Search snippets…</div>
+              <button class="btn">New snippet</button>
+            </div>
+            <div class="group">
+              <h2>Your snippets</h2>
+              <div class="card">
+                <div class="row">
+                  <div>
+                    <h3>“my address”</h3>
+                    <p>221B Baker Street, London NW1 6XE</p>
+                  </div>
+                  <div class="sw on"></div>
+                </div>
+                <div class="row">
+                  <div>
+                    <h3>“calendar link”</h3>
+                    <p>https://cal.com/shahzad/30min</p>
+                  </div>
+                  <div class="sw on"></div>
+                </div>
+                <div class="row">
+                  <div>
+                    <h3>“email sign off”</h3>
+                    <p>Best regards, Shahzad — Reach Neo</p>
+                  </div>
+                  <div class="sw on"></div>
+                </div>
+                <div class="row">
+                  <div>
+                    <h3>“bug template”</h3>
+                    <p>Steps to reproduce: 1. … Expected: … Actual: …</p>
+                  </div>
+                  <div class="sw"></div>
+                </div>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--ink3); padding: 0 16px">
+              Say the trigger phrase while dictating and Voxflow inserts the
+              saved text.
+            </p>
+          </div>
+
+          <!-- STYLES -->
+          <div class="page" id="p-styles">
+            <div class="group">
+              <h2>Writing style</h2>
+              <div class="sty">
+                <div>
+                  <b>Formal</b>
+                  <p>
+                    Complete sentences, proper punctuation and capitalisation.
+                  </p>
+                </div>
+                <div class="pick">
+                  <b>Casual</b>
+                  <p>
+                    Natural and relaxed. Light punctuation, contractions kept.
+                  </p>
+                </div>
+                <div>
+                  <b>Very casual</b>
+                  <p>Lowercase, minimal punctuation, short and quick.</p>
+                </div>
+              </div>
+            </div>
+            <div class="group">
+              <h2>Per-app styles</h2>
+              <p class="sub">
+                Voxflow detects the active app and applies its style.
+              </p>
+              <div class="card">
+                <div class="row">
+                  <div class="app">
+                    <span class="ico" style="background: #2f7d5b">M</span>
+                    <h3>Messages</h3>
+                  </div>
+                  <div class="select">Very casual</div>
+                </div>
+                <div class="row">
+                  <div class="app">
+                    <span class="ico" style="background: #d97706">@</span>
+                    <h3>Mail</h3>
+                  </div>
+                  <div class="select">Formal</div>
+                </div>
+                <div class="row">
+                  <div class="app">
+                    <span class="ico" style="background: #332d51">S</span>
+                    <h3>Slack</h3>
+                  </div>
+                  <div class="select">Casual</div>
+                </div>
+                <div class="row">
+                  <div class="app">
+                    <span class="ico" style="background: #4a6fa5">{}</span>
+                    <h3>VS Code</h3>
+                  </div>
+                  <div class="select">Technical</div>
+                </div>
+                <div class="row">
+                  <div class="app">
+                    <span class="ico" style="background: #808080">+</span>
+                    <h3 style="color: var(--ink2)">Add an app…</h3>
+                  </div>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="foot">
+        <div class="l">
+          <span><i class="dot"></i>Parakeet Unified 0.6B</span
+          ><span>Ready</span>
+        </div>
+        <div>Up to date • v0.9.8</div>
+      </div>
+    </div>
+
+    <div class="ovs">
+      <h2>Recording overlay (Flow bar)</h2>
+      <div class="ovgrid">
+        <div class="stage">
+          <small>Recording</small>
+          <div class="ov">
+            <div class="bars" id="b1"></div>
+            Listening…
+          </div>
+        </div>
+        <div class="stage">
+          <small>Transcribing</small>
+          <div class="ov">Transcribing…</div>
+        </div>
+        <div class="stage">
+          <small>Live</small>
+          <div class="live">
+            <div class="h">
+              <div class="bars" id="b2"></div>
+              Listening
+            </div>
+            Hey Sarah, can you send over the revised proposal by Friday…
+          </div>
+        </div>
+      </div>
+    </div>
+    <section class="opts">
+      <h2>Dark mode background options</h2>
+      <p>
+        Same screen on each background. The first is what dark mode uses today;
+        A, B and C are darker and blacker. Higher contrast numbers are easier to
+        read (4.5 is the minimum).
+      </p>
+      <div class="optgrid">
+        <div class="mini" style="--bg: #332d51">
+          <div class="mt"><i></i><i></i><i></i></div>
+          <div class="mb">
+            <div class="ms">
+              <b
+                ><svg viewBox="0 0 104.29 52.93">
+                  <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+                  <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+                  <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+                  <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+                  <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" /></svg
+                >Voxflow</b
+              ><span class="a">General</span><span>History</span
+              ><span>Dictionary</span><span>Snippets</span><span>Styles</span
+              ><span>Models</span>
+            </div>
+            <div class="mc">
+              <h4>Sound</h4>
+              <div class="card">
+                <div class="row">
+                  <h3>Microphone</h3>
+                  <div
+                    class="select"
+                    style="
+                      min-width: 0;
+                      padding: 3px 20px 3px 6px;
+                      font-size: 10px;
+                    "
+                  >
+                    MacBook
+                  </div>
+                </div>
+                <div class="row">
+                  <h3>Audio feedback</h3>
+                  <div class="sw on"></div>
+                </div>
+                <div class="row">
+                  <h3>Mute</h3>
+                  <div class="sw"></div>
+                </div>
+              </div>
+              <span class="mbtn">Save</span>
+            </div>
+          </div>
+          <div class="cap">
+            <b>Current</b><br />#332d51<br />Text 12.4:1 · Hints 5.3:1 · Accent
+            5.1:1
+          </div>
+        </div>
+        <div class="mini" style="--bg: #1b1727">
+          <div class="mt"><i></i><i></i><i></i></div>
+          <div class="mb">
+            <div class="ms">
+              <b
+                ><svg viewBox="0 0 104.29 52.93">
+                  <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+                  <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+                  <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+                  <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+                  <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" /></svg
+                >Voxflow</b
+              ><span class="a">General</span><span>History</span
+              ><span>Dictionary</span><span>Snippets</span><span>Styles</span
+              ><span>Models</span>
+            </div>
+            <div class="mc">
+              <h4>Sound</h4>
+              <div class="card">
+                <div class="row">
+                  <h3>Microphone</h3>
+                  <div
+                    class="select"
+                    style="
+                      min-width: 0;
+                      padding: 3px 20px 3px 6px;
+                      font-size: 10px;
+                    "
+                  >
+                    MacBook
+                  </div>
+                </div>
+                <div class="row">
+                  <h3>Audio feedback</h3>
+                  <div class="sw on"></div>
+                </div>
+                <div class="row">
+                  <h3>Mute</h3>
+                  <div class="sw"></div>
+                </div>
+              </div>
+              <span class="mbtn">Save</span>
+            </div>
+          </div>
+          <div class="cap">
+            <b>A · Midnight plum</b><br />#1b1727<br />Text 16.9:1 · Hints 6.4:1
+            · Accent 6.9:1
+          </div>
+        </div>
+        <div class="mini" style="--bg: #15111f">
+          <div class="mt"><i></i><i></i><i></i></div>
+          <div class="mb">
+            <div class="ms">
+              <b
+                ><svg viewBox="0 0 104.29 52.93">
+                  <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+                  <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+                  <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+                  <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+                  <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" /></svg
+                >Voxflow</b
+              ><span class="a">General</span><span>History</span
+              ><span>Dictionary</span><span>Snippets</span><span>Styles</span
+              ><span>Models</span>
+            </div>
+            <div class="mc">
+              <h4>Sound</h4>
+              <div class="card">
+                <div class="row">
+                  <h3>Microphone</h3>
+                  <div
+                    class="select"
+                    style="
+                      min-width: 0;
+                      padding: 3px 20px 3px 6px;
+                      font-size: 10px;
+                    "
+                  >
+                    MacBook
+                  </div>
+                </div>
+                <div class="row">
+                  <h3>Audio feedback</h3>
+                  <div class="sw on"></div>
+                </div>
+                <div class="row">
+                  <h3>Mute</h3>
+                  <div class="sw"></div>
+                </div>
+              </div>
+              <span class="mbtn">Save</span>
+            </div>
+          </div>
+          <div class="cap">
+            <b>B · Ink violet</b><br />#15111f<br />Text 17.9:1 · Hints 6.6:1 ·
+            Accent 7.3:1
+          </div>
+        </div>
+        <div class="mini" style="--bg: #221c33">
+          <div class="mt"><i></i><i></i><i></i></div>
+          <div class="mb">
+            <div class="ms">
+              <b
+                ><svg viewBox="0 0 104.29 52.93">
+                  <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+                  <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+                  <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+                  <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+                  <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" /></svg
+                >Voxflow</b
+              ><span class="a">General</span><span>History</span
+              ><span>Dictionary</span><span>Snippets</span><span>Styles</span
+              ><span>Models</span>
+            </div>
+            <div class="mc">
+              <h4>Sound</h4>
+              <div class="card">
+                <div class="row">
+                  <h3>Microphone</h3>
+                  <div
+                    class="select"
+                    style="
+                      min-width: 0;
+                      padding: 3px 20px 3px 6px;
+                      font-size: 10px;
+                    "
+                  >
+                    MacBook
+                  </div>
+                </div>
+                <div class="row">
+                  <h3>Audio feedback</h3>
+                  <div class="sw on"></div>
+                </div>
+                <div class="row">
+                  <h3>Mute</h3>
+                  <div class="sw"></div>
+                </div>
+              </div>
+              <span class="mbtn">Save</span>
+            </div>
+          </div>
+          <div class="cap">
+            <b>C · Deep aubergine</b><br />#221c33<br />Text 15.8:1 · Hints
+            6.1:1 · Accent 6.5:1
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="brandsheet">
+      <h2>Logo</h2>
+      <div class="hero">
+        <div style="background: #e5e5e5">
+          <svg
+            id="Layer_1"
+            xmlns="http://www.w3.org/2000/svg"
+            version="1.1"
+            viewBox="0 0 245.3 240"
+          >
+            <defs>
+              <style>
+                .st0 {
+                  fill: #e5e5e5;
+                }
+
+                .st1 {
+                  fill: #332d51;
+                }
+
+                .st2 {
+                  fill: #a695f8;
+                }
+              </style>
+            </defs>
+            <rect class="st0" y="161" width="245.3" height="79" />
+            <rect class="st2" width="122.7" height="79" />
+            <rect class="st1" x="122.7" width="122.7" height="79" />
+            <g id="logo">
+              <g>
+                <ellipse class="st1" cx="79.5" cy="120" rx="8.6" ry="12.1" />
+                <ellipse class="st1" cx="168.3" cy="119.9" rx="6.8" ry="11" />
+                <ellipse class="st1" cx="150" cy="120" rx="8.6" ry="17.5" />
+                <ellipse class="st1" cx="100.8" cy="119.9" rx="9.8" ry="21.9" />
+                <ellipse
+                  class="st1"
+                  cx="125.9"
+                  cy="119.9"
+                  rx="12.5"
+                  ry="26.5"
+                />
+              </g>
+            </g>
+            <g>
+              <path
+                d="M86.9,206.5l-5.8-16h2.6l3.1,8.9c.2.7.5,1.5.8,2.5.3,1,.6,2.2,1,3.5h-.5c.4-1.4.7-2.6,1-3.5.3-1,.5-1.8.8-2.5l3-8.9h2.7l-5.7,16h-3Z"
+              />
+              <path
+                d="M101.6,206.7c-1.1,0-2.1-.3-2.9-.8-.8-.5-1.5-1.2-2-2.2-.5-.9-.7-2-.7-3.2s.2-2.3.7-3.3c.5-.9,1.1-1.7,2-2.2.8-.5,1.8-.8,2.9-.8s2.1.3,3,.8c.8.5,1.5,1.2,2,2.2.5.9.7,2,.7,3.3s-.2,2.3-.7,3.2-1.1,1.7-2,2.2c-.8.5-1.8.8-3,.8ZM101.6,204.7c.7,0,1.3-.2,1.8-.6.5-.4.8-.9,1.1-1.5.2-.6.3-1.3.3-2.1s-.1-1.5-.3-2.1c-.2-.6-.6-1.2-1.1-1.5-.5-.4-1.1-.6-1.8-.6s-1.3.2-1.8.6-.8.9-1.1,1.5c-.2.6-.3,1.3-.3,2.1s.1,1.5.3,2.1c.2.6.6,1.1,1.1,1.5s1.1.6,1.8.6Z"
+              />
+              <path
+                d="M108.4,206.5l4.7-7.1v1.8s-4.5-6.8-4.5-6.8h2.7l1.4,2.2c.4.6.7,1.2,1,1.7.3.6.6,1.1.9,1.6h-1.1c.3-.5.6-1,.8-1.6.3-.6.6-1.1,1-1.7l1.4-2.2h2.6l-4.5,6.8v-1.8l4.7,7h-2.7l-1.6-2.6c-.4-.6-.7-1.2-1-1.7s-.6-1.1-.9-1.6h1.1c-.3.5-.6,1-.8,1.6s-.6,1.1-.9,1.7l-1.6,2.6h-2.6Z"
+              />
+              <path
+                d="M128,194.5v1.9h-7.3v-1.9h7.3ZM122.9,206.5v-13.4c0-.7.2-1.4.5-1.9.3-.5.8-.9,1.3-1.1.5-.2,1.1-.4,1.8-.4s.9,0,1.2.1c.3,0,.6.1.7.2l-.5,1.9c-.1,0-.3,0-.4-.1-.2,0-.4,0-.6,0-.6,0-1,.1-1.2.4-.3.3-.4.7-.4,1.2v13.1h-2.4Z"
+              />
+              <path d="M132.7,190.5v16h-2.4v-16h2.4Z" />
+              <path
+                d="M140.9,206.7c-1.1,0-2.1-.3-2.9-.8-.8-.5-1.5-1.2-2-2.2-.5-.9-.7-2-.7-3.2s.2-2.3.7-3.3c.5-.9,1.1-1.7,2-2.2.8-.5,1.8-.8,2.9-.8s2.1.3,3,.8c.8.5,1.5,1.2,2,2.2.5.9.7,2,.7,3.3s-.2,2.3-.7,3.2-1.1,1.7-2,2.2c-.8.5-1.8.8-3,.8ZM140.9,204.7c.7,0,1.3-.2,1.8-.6.5-.4.8-.9,1.1-1.5.2-.6.3-1.3.3-2.1s-.1-1.5-.3-2.1c-.2-.6-.6-1.2-1.1-1.5-.5-.4-1.1-.6-1.8-.6s-1.3.2-1.8.6-.8.9-1.1,1.5c-.2.6-.3,1.3-.3,2.1s.1,1.5.3,2.1c.2.6.6,1.1,1.1,1.5s1.1.6,1.8.6Z"
+              />
+              <path
+                d="M151.5,206.5l-3.6-12h2.5l1.3,5c.2.7.4,1.6.6,2.5.2.9.4,1.9.6,3.1h-.3c.2-1.1.4-2.1.6-3,.2-.9.4-1.8.6-2.5l1.3-5h2.4l1.3,5c.2.8.4,1.6.6,2.5.2.9.4,1.9.6,3.1h-.4c.2-1.1.4-2.1.6-3,.2-.9.4-1.8.6-2.5l1.3-5h2.5l-3.6,12h-2.4l-1.5-5.2c-.2-.5-.3-1.1-.4-1.6-.1-.6-.3-1.2-.4-1.7-.1-.6-.3-1.2-.4-1.8h.5c-.1.6-.3,1.2-.4,1.8s-.3,1.2-.4,1.8c-.1.6-.3,1.1-.4,1.6l-1.5,5.2h-2.4Z"
+              />
+            </g>
+          </svg>
+        </div>
+        <div style="background: #fbfbfb">
+          <svg
+            viewBox="0 0 104.29 52.93"
+            style="max-width: 200px"
+            fill="#332d51"
+          >
+            <g id="x">
+              <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+              <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+              <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+              <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+              <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" />
+            </g>
+          </svg>
+        </div>
+      </div>
+      <h2>Logo on brand colours</h2>
+      <div class="logos">
+        <div style="background: #fbfbfb">
+          <svg viewBox="0 0 104.29 52.93" fill="#332d51">
+            <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+            <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+            <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+            <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+            <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" />
+          </svg>
+        </div>
+        <div style="background: #a695f8">
+          <svg viewBox="0 0 104.29 52.93" fill="#332d51">
+            <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+            <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+            <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+            <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+            <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" />
+          </svg>
+        </div>
+        <div style="background: #332d51; box-shadow: 0 0 0 1px #fbfbfb33">
+          <svg viewBox="0 0 104.29 52.93" fill="#a695f8">
+            <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+            <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+            <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+            <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+            <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" />
+          </svg>
+        </div>
+        <div style="background: #0f0f0f">
+          <svg viewBox="0 0 104.29 52.93" fill="#fbfbfb">
+            <ellipse cx="8.63" cy="26.52" rx="8.63" ry="12.13" />
+            <ellipse cx="97.46" cy="26.46" rx="6.83" ry="11.03" />
+            <ellipse cx="79.1" cy="26.52" rx="8.63" ry="17.46" />
+            <ellipse cx="29.93" cy="26.46" rx="9.76" ry="21.89" />
+            <ellipse cx="55.08" cy="26.46" rx="12.49" ry="26.46" />
+          </svg>
+        </div>
+      </div>
+      <h2>Colour palette</h2>
+      <div class="sw5">
+        <div>
+          <i style="background: #1b1727"></i
+          ><span
+            ><b>Midnight plum</b>#1b1727<br />Dark-mode app background</span
+          >
+        </div>
+        <div>
+          <i style="background: #332d51"></i
+          ><span
+            ><b>Primary</b>#332d51<br />Active tab, buttons, light-mode
+            pill</span
+          >
+        </div>
+        <div>
+          <i style="background: #a695f8"></i
+          ><span
+            ><b>Accent</b>#a695f8<br />Switches, chips, focus, overlay
+            bars</span
+          >
+        </div>
+        <div>
+          <i style="background: #fbfbfb; border-bottom: 1px solid #8083"></i
+          ><span><b>Paper</b>#fbfbfb<br />Cards, window, inputs</span>
+        </div>
+        <div>
+          <i style="background: #e5e5e5"></i
+          ><span><b>Canvas</b>#e5e5e5<br />Brand-sheet neutral, dividers</span>
+        </div>
+        <div>
+          <i style="background: #0f0f0f"></i
+          ><span><b>Ink</b>#0f0f0f<br />Text and headings</span>
+        </div>
+      </div>
+      <h2>Status and dark-mode colours</h2>
+      <div class="status">
+        <div><i style="background: #2f7d5b"></i>Success #2f7d5b</div>
+        <div><i style="background: #b45309"></i>Warning #b45309</div>
+        <div><i style="background: #dc2626"></i>Error #dc2626</div>
+        <div>
+          <i style="background: #1b1727; border: 1px solid #8085"></i>Dark
+          background #1b1727
+        </div>
+      </div>
+      <h2>Typography: Inter</h2>
+      <div class="type">
+        <div class="big">Speak. Voxflow types.</div>
+        <div class="w">
+          <span style="font-weight: 400">Regular 400</span
+          ><b style="font-weight: 500">Medium 500</b
+          ><b style="font-weight: 600">SemiBold 600</b
+          ><b style="font-weight: 700">Bold 700</b>
+        </div>
+      </div>
+      <h2>Controls</h2>
+      <div class="uikit">
+        <button class="btn">Primary</button
+        ><button class="btn sec">Secondary</button
+        ><button class="btn ghost">Outline</button>
+        <div class="sw on"></div>
+        <div class="sw"></div>
+        <span class="chip">Accent chip</span
+        ><span class="chip moss">Success</span>
+        <div class="keys"><kbd>⌥</kbd><kbd>Space</kbd></div>
+      </div>
+    </section>
+    <p class="note">
+      Layout, spacing, radii, row/card pattern and sidebar are Voxflow's.
+      Colours: primary #332d51, accent #a695f8, paper #fbfbfb, ink #0f0f0f,
+      canvas #e5e5e5, Inter throughout. Dark mode swaps primary to the lavender,
+      as Voxflow's theme does. "NEW" tags mark pages that don't exist in
+      Voxflow.
+    </p>
+
+    <script>
+      const I = {
+        general:
+          '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/>',
+        history:
+          '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+        dictionary:
+          '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+        snippets:
+          '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+        styles:
+          '<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.55-2.5 5.55-5.55C21.97 6.01 17.46 2 12 2z"/>',
+        models:
+          '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/>',
+        advanced:
+          '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+        post: '<path d="M9.94 14.06 12 21l2.06-6.94L21 12l-6.94-2.06L12 3 9.94 9.94 3 12z"/>',
+        about: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+      };
+      const items = [
+        ["general", "General"],
+        ["history", "History"],
+        ["dictionary", "Dictionary", 1],
+        ["snippets", "Snippets", 1],
+        ["styles", "Styles", 1],
+        ["sep"],
+        ["models", "Models"],
+        ["advanced", "Advanced"],
+        ["post", "Post-Processing"],
+        ["about", "About"],
+      ];
+      const nav = document.getElementById("nav");
+      items.forEach(([id, label, n]) => {
+        if (id === "sep") {
+          nav.insertAdjacentHTML("beforeend", '<div class="sep"></div>');
+          return;
+        }
+        nav.insertAdjacentHTML(
+          "beforeend",
+          `<a data-page="${id}" class="${n ? "new" : ""}"><svg viewBox="0 0 24 24">${I[id]}</svg>${label}</a>`,
+        );
+      });
+      function show(p) {
+        if (!document.getElementById("p-" + p)) return;
+        document
+          .querySelectorAll(".page")
+          .forEach((e) => e.classList.toggle("show", e.id === "p-" + p));
+        document
+          .querySelectorAll(".nav a")
+          .forEach((a) => a.classList.toggle("active", a.dataset.page === p));
+        document
+          .querySelectorAll(".bar button[data-page]")
+          .forEach((b) => b.classList.toggle("on", b.dataset.page === p));
+      }
+      document.addEventListener("click", (e) => {
+        const t = e.target.closest("[data-page]");
+        if (t) show(t.dataset.page);
+      });
+      document.getElementById("theme").onclick = (e) => {
+        const r = document.documentElement;
+        const d = r.dataset.theme === "dark";
+        r.dataset.theme = d ? "light" : "dark";
+        e.target.textContent = d ? "Dark mode" : "Light mode";
+      };
+      ["b1", "b2"].forEach((id) => {
+        const el = document.getElementById(id);
+        [6, 12, 18, 10, 15, 7, 13].forEach((h) =>
+          el.insertAdjacentHTML("beforeend", `<i style="height:${h}px"></i>`),
+        );
+      });
+      show("general");
+    </script>
+  </body>
+</html>

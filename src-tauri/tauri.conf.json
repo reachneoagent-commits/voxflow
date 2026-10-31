@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Voxflow",
+  "version": "0.9.8",
+  "identifier": "com.voxflow.app",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": {
+          "allow": ["**"],
+          "requireLiteralLeadingDot": false
+        }
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": true,
+    "targets": "all",
+    "resources": ["resources/**/*"],
+    "license": "MIT",
+    "publisher": "Voxflow",
+    "copyright": "MIT License. Based on Voxflow by CJ Pais.",
+    "category": "Utility",
+    "homepage": "https://github.com/reachneoagent-commits/voxflow",
+    "shortDescription": "Offline voice dictation",
+    "longDescription": "Voxflow is a free, open source speech-to-text app that works completely offline. Press a shortcut, speak, and your words appear in any text field.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "files": {},
+      "hardenedRuntime": true,
+      "minimumSystemVersion": "10.15",
+      "signingIdentity": "-",
+      "entitlements": "Entitlements.plist"
+    },
+    "linux": {
+      "deb": {
+        "depends": [
+          "libgtk-layer-shell0",
+          "libopenblas0",
+          "libssl3t64 | libssl3"
+        ],
+        "files": {
+          "/usr/lib/Voxflow": "transcribe-libs"
+        }
+      },
+      "rpm": {
+        "depends": [
+          "libgtk-layer-shell.so.0()(64bit)",
+          "libopenblas.so.0()(64bit)"
+        ],
+        "compression": {
+          "type": "none"
+        },
+        "files": {
+          "/usr/lib/Voxflow": "transcribe-libs"
+        }
+      },
+      "appimage": {
+        "bundleMediaFramework": true,
+        "files": {
+          "/usr/lib": "transcribe-libs"
+        }
+      }
+    },
+    "windows": {
+      "nsis": {
+        "template": "nsis/installer.nsi",
+        "installerIcon": "icons/icon.ico"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERFQkM4QTVDMEVCMzZFNUMKUldSY2JyTU9YSXE4M3NWZUdGU2kxd1NFRXBwNXg3ZllnZDhQL3ZZcDdoZE85NGJsdDM3Y25CTWkK",
+      "endpoints": [
+        "https://github.com/reachneoagent-commits/voxflow/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}
