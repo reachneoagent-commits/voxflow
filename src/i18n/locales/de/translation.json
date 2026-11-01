@@ -437,7 +437,6 @@
         "deleteFailed": "Einige alte Modelle konnten nicht gelöscht werden. Details findest du im Protokoll."
       },
       "rescan": {
-        "label": "Neu scannen",
         "tooltip": "Erneut nach Modellen scannen, die außerhalb von Voxflow zum Modellordner oder Hugging-Face-Cache hinzugefügt wurden"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "Nach 1 Stunde",
           "sec15": "Nach 15 Sekunden (Debug)"
         }
-      },
-      "customWords": {
-        "title": "Benutzerdefinierte Wörter",
-        "description": "Hilf unterstützten Modellen, Namen und Fachbegriffe zu erkennen. Die unscharfe Korrektur ist derzeit auf Wörter mit den Buchstaben A–Z und Zahlen beschränkt.",
-        "placeholder": "Wort hinzufügen",
-        "add": "Hinzufügen",
-        "remove": "{{word}} entfernen",
-        "duplicate": "\"{{word}}\" existiert bereits"
       },
       "voiceActivityDetection": {
         "title": "Sprachaktivitätserkennung (VAD)",
@@ -918,11 +909,6 @@
         "title": "Quellcode",
         "description": "Quellcode ansehen und beitragen",
         "button": "Auf GitHub ansehen"
-      },
-      "supportDevelopment": {
-        "title": "Entwicklung unterstützen",
-        "description": "Hilf uns, Voxflow weiterzuentwickeln",
-        "button": "Spenden"
       },
       "acknowledgments": {
         "title": "Danksagungen",

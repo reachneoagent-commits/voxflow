@@ -437,7 +437,6 @@
         "deleteFailed": "Beberapa model lama tidak dapat dihapus. Periksa log untuk detailnya."
       },
       "rescan": {
-        "label": "Pindai Ulang",
         "tooltip": "Pindai ulang model yang ditambahkan ke folder model atau cache Hugging Face dari luar Voxflow"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "Setelah 1 jam",
           "sec15": "Setelah 15 detik (Debug)"
         }
-      },
-      "customWords": {
-        "title": "Kata Khusus",
-        "description": "Bantu model yang didukung mengenali nama dan istilah khusus. Koreksi fuzzy saat ini terbatas pada kata yang menggunakan huruf A–Z dan angka.",
-        "placeholder": "Tambahkan kata",
-        "add": "Tambah",
-        "remove": "Hapus {{word}}",
-        "duplicate": "\"{{word}}\" sudah ada"
       },
       "voiceActivityDetection": {
         "title": "Deteksi Aktivitas Suara",
@@ -918,11 +909,6 @@
         "title": "Kode Sumber",
         "description": "Lihat kode sumber dan berkontribusi",
         "button": "Lihat di GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Dukung Pengembangan",
-        "description": "Bantu kami terus mengembangkan Voxflow",
-        "button": "Donasi"
       },
       "acknowledgments": {
         "title": "Ucapan Terima Kasih",

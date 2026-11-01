@@ -437,7 +437,6 @@
         "deleteFailed": "Non è stato possibile eliminare alcuni modelli precedenti. Controlla il log per i dettagli."
       },
       "rescan": {
-        "label": "Riscansiona",
         "tooltip": "Riscansiona per trovare modelli aggiunti alla cartella dei modelli o alla cache di Hugging Face al di fuori di Voxflow"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "Dopo 1 ora",
           "sec15": "Dopo 15 secondi (Debug)"
         }
-      },
-      "customWords": {
-        "title": "Parole personalizzate",
-        "description": "Aiuta i modelli supportati a riconoscere nomi e termini specialistici. La correzione approssimativa è attualmente limitata alle parole che usano le lettere A–Z e i numeri.",
-        "placeholder": "Aggiungi una parola",
-        "add": "Aggiungi",
-        "remove": "Rimuovi {{word}}",
-        "duplicate": "\"{{word}}\" esiste già"
       },
       "voiceActivityDetection": {
         "title": "Rilevamento dell'attività vocale",
@@ -918,11 +909,6 @@
         "title": "Codice Sorgente",
         "description": "Vedi e contribuisci al codice sorgente",
         "button": "Vedi su GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Supporta lo Sviluppo",
-        "description": "Aiutaci a sviluppare Voxflow",
-        "button": "Dona"
       },
       "acknowledgments": {
         "title": "Ringraziamenti",

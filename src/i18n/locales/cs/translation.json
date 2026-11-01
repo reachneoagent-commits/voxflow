@@ -437,7 +437,6 @@
         "deleteFailed": "Některé staré modely se nepodařilo smazat. Podrobnosti najdete v protokolu."
       },
       "rescan": {
-        "label": "Znovu prohledat",
         "tooltip": "Znovu prohledat modely přidané do složky modelů nebo mezipaměti Hugging Face mimo Voxflow"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "Po 1 hodině",
           "sec15": "Po 15 sekundách (Debug)"
         }
-      },
-      "customWords": {
-        "title": "Vlastní slova",
-        "description": "Pomozte podporovaným modelům rozpoznávat jména a odborné termíny. Přibližné opravy jsou v současnosti omezeny na slova obsahující písmena A–Z a číslice.",
-        "placeholder": "Přidat slovo",
-        "add": "Přidat",
-        "remove": "Odebrat {{word}}",
-        "duplicate": "\"{{word}}\" již existuje"
       },
       "voiceActivityDetection": {
         "title": "Detekce hlasové aktivity",
@@ -918,11 +909,6 @@
         "title": "Zdrojový kód",
         "description": "Zobrazit zdrojový kód a přispět",
         "button": "Zobrazit na GitHubu"
-      },
-      "supportDevelopment": {
-        "title": "Podpořte vývoj",
-        "description": "Pomozte nám pokračovat ve vývoji Voxflow",
-        "button": "Přispět"
       },
       "acknowledgments": {
         "title": "Poděkování",

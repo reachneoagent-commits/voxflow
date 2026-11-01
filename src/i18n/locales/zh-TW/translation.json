@@ -437,7 +437,6 @@
         "deleteFailed": "部分舊模型無法刪除。請查看記錄檔以了解詳情。"
       },
       "rescan": {
-        "label": "重新掃描",
         "tooltip": "重新掃描在 Voxflow 之外新增到模型資料夾或 Hugging Face 快取中的模型"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "1 小時後",
           "sec15": "15 秒後（偵錯）"
         }
-      },
-      "customWords": {
-        "title": "自訂詞彙",
-        "description": "協助支援的模型辨識名稱和專業術語。目前，模糊修正僅適用於使用 A–Z 字母和數字的詞語。",
-        "placeholder": "新增詞彙",
-        "add": "新增",
-        "remove": "刪除 {{word}}",
-        "duplicate": "「{{word}}」已存在"
       },
       "voiceActivityDetection": {
         "title": "語音活動偵測",
@@ -918,11 +909,6 @@
         "title": "原始碼",
         "description": "檢視原始碼並參與貢獻",
         "button": "在 GitHub 上檢視"
-      },
-      "supportDevelopment": {
-        "title": "支持開發",
-        "description": "幫助我們繼續開發 Voxflow",
-        "button": "捐贈"
       },
       "acknowledgments": {
         "title": "致謝",

@@ -437,7 +437,6 @@
         "deleteFailed": "No s'han pogut suprimir alguns models antics. Consulteu el registre per a més detalls."
       },
       "rescan": {
-        "label": "Torna a cercar",
         "tooltip": "Torna a cercar models afegits a la carpeta de models o a la memòria cau de Hugging Face des de fora del Voxflow"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "Al cap d'1 hora",
           "sec15": "Al cap de 15 segons (depuració)"
         }
-      },
-      "customWords": {
-        "title": "Paraules personalitzades",
-        "description": "Ajudeu els models compatibles a reconèixer noms i termes especialitzats. Actualment, la correcció per similitu es limita a paraules amb lletres de la A a la Z i números.",
-        "placeholder": "Afegiu una paraula",
-        "add": "Afegiu",
-        "remove": "Suprimiu {{word}}",
-        "duplicate": "«{{word}}» ja existeix"
       },
       "voiceActivityDetection": {
         "title": "Detecció d'activitat de veu",
@@ -918,11 +909,6 @@
         "title": "Codi font",
         "description": "Consulta el codi font i col·laboreu-hi",
         "button": "Mostra al GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Dona suport al desenvolupament",
-        "description": "Ajudeu-nos a continuar desenvolupant el Voxflow",
-        "button": "Feu una donació"
       },
       "acknowledgments": {
         "title": "Agraïments",

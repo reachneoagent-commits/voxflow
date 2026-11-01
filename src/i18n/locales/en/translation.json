@@ -437,7 +437,6 @@
         "deleteFailed": "Some old models couldn't be deleted. Check the log for details."
       },
       "rescan": {
-        "label": "Rescan",
         "tooltip": "Rescan for models added to the models folder or Hugging Face cache outside Voxflow"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "After 1 hour",
           "sec15": "After 15 seconds (Debug)"
         }
-      },
-      "customWords": {
-        "title": "Custom Words",
-        "description": "Help supported models recognize names and specialized terms. Fuzzy correction is currently limited to words using A–Z and numbers.",
-        "placeholder": "Add a word",
-        "add": "Add",
-        "remove": "Remove {{word}}",
-        "duplicate": "\"{{word}}\" already exists"
       },
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
@@ -918,11 +909,6 @@
         "title": "Source Code",
         "description": "View source code and contribute",
         "button": "View on GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Support Development",
-        "description": "Help us continue building Voxflow",
-        "button": "Donate"
       },
       "acknowledgments": {
         "title": "Acknowledgments",

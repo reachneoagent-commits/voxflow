@@ -437,7 +437,6 @@
         "deleteFailed": "Nogle gamle modeller kunne ikke slettes. Se loggen for detaljer."
       },
       "rescan": {
-        "label": "Søg igen",
         "tooltip": "Søg igen efter modeller, der er tilføjet til modelmappen eller Hugging Face-cachen uden for Voxflow"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "Efter 1 time",
           "sec15": "Efter 15 sekunder (fejlfinding)"
         }
-      },
-      "customWords": {
-        "title": "Brugerdefinerede ord",
-        "description": "Hjælp understøttede modeller med at genkende navne og specialiserede udtryk. Fuzzy-korrektion er i øjeblikket begrænset til ord, der bruger A-Z og tal.",
-        "placeholder": "Tilføj et ord",
-        "add": "Tilføj",
-        "remove": "Fjern {{word}}",
-        "duplicate": "\"{{word}}\" findes allerede"
       },
       "voiceActivityDetection": {
         "title": "Stemmeaktivitetsdetektion",
@@ -918,11 +909,6 @@
         "title": "Kildekode",
         "description": "Se kildekode og bidrag",
         "button": "Vis på GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Støt udviklingen",
-        "description": "Hjælp os med at fortsætte udviklingen af Voxflow",
-        "button": "Donér"
       },
       "acknowledgments": {
         "title": "Anerkendelser",

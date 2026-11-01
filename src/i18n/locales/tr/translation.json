@@ -437,7 +437,6 @@
         "deleteFailed": "Bazı eski modeller silinemedi. Ayrıntılar için günlüğe bakın."
       },
       "rescan": {
-        "label": "Yeniden Tara",
         "tooltip": "Voxflow dışında modeller klasörüne veya Hugging Face önbelleğine eklenen modelleri yeniden tara"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "1 saat sonra",
           "sec15": "15 saniye sonra (Debug)"
         }
-      },
-      "customWords": {
-        "title": "Özel Kelimeler",
-        "description": "Desteklenen modellerin adları ve özel terimleri tanımasına yardımcı olun. Bulanık düzeltme şu anda A–Z harflerini ve rakamları kullanan sözcüklerle sınırlıdır.",
-        "placeholder": "Kelime ekle",
-        "add": "Ekle",
-        "remove": "{{word}} Kaldır",
-        "duplicate": "\"{{word}}\" zaten mevcut"
       },
       "voiceActivityDetection": {
         "title": "Ses Etkinliği Algılama",
@@ -918,11 +909,6 @@
         "title": "Kaynak Kodu",
         "description": "Kaynak kodunu görüntüle ve katkıda bulun",
         "button": "GitHub'da Görüntüle"
-      },
-      "supportDevelopment": {
-        "title": "Geliştirmeyi Destekle",
-        "description": "Voxflow'yi geliştirmeye devam etmemize yardımcı olun",
-        "button": "Bağış Yap"
       },
       "acknowledgments": {
         "title": "Teşekkürler",

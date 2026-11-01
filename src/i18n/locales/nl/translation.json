@@ -437,7 +437,6 @@
         "deleteFailed": "Sommige oude modellen konden niet worden verwijderd. Bekijk het logboek voor details."
       },
       "rescan": {
-        "label": "Opnieuw scannen",
         "tooltip": "Scannen naar modellen die buiten Voxflow om zijn toegevoegd aan de modellenmap of Hugging Face-cache"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "Na 1 uur",
           "sec15": "Na 15 seconden (Debug)"
         }
-      },
-      "customWords": {
-        "title": "Eigen woordenlijst",
-        "description": "Help ondersteunde modellen namen en vaktermen te herkennen. Fuzzy-correctie is momenteel beperkt tot woorden met de letters A–Z en cijfers.",
-        "placeholder": "Woord toevoegen",
-        "add": "Toevoegen",
-        "remove": "{{word}} verwijderen",
-        "duplicate": "\"{{word}}\" bestaat al"
       },
       "voiceActivityDetection": {
         "title": "Spraakactiviteitsdetectie (VAD)",
@@ -918,11 +909,6 @@
         "title": "Broncode",
         "description": "Bekijk de broncode en draag bij",
         "button": "Bekijk op GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Ontwikkeling ondersteunen",
-        "description": "Help ons om te blijven bouwen aan Voxflow",
-        "button": "Doneren"
       },
       "acknowledgments": {
         "title": "Dankbetuigingen",

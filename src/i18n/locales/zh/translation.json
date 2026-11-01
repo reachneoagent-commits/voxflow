@@ -437,7 +437,6 @@
         "deleteFailed": "部分旧模型无法删除。请查看日志了解详情。"
       },
       "rescan": {
-        "label": "重新扫描",
         "tooltip": "重新扫描在 Voxflow 之外添加到模型文件夹或 Hugging Face 缓存中的模型"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "1 小时后",
           "sec15": "15 秒后（调试）"
         }
-      },
-      "customWords": {
-        "title": "自定义词汇",
-        "description": "帮助受支持的模型识别名称和专业术语。目前，模糊纠错仅适用于使用 A–Z 字母和数字的词语。",
-        "placeholder": "添加词汇",
-        "add": "添加",
-        "remove": "删除 {{word}}",
-        "duplicate": "\"{{word}}\" 已存在"
       },
       "voiceActivityDetection": {
         "title": "语音活动检测",
@@ -918,11 +909,6 @@
         "title": "源代码",
         "description": "查看源代码并贡献",
         "button": "在 GitHub 上查看"
-      },
-      "supportDevelopment": {
-        "title": "支持开发",
-        "description": "帮助我们继续开发 Voxflow",
-        "button": "捐赠"
       },
       "acknowledgments": {
         "title": "致谢",

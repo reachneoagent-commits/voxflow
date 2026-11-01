@@ -437,7 +437,6 @@
         "deleteFailed": "Vissa gamla modeller kunde inte tas bort. Se loggen för mer information."
       },
       "rescan": {
-        "label": "Skanna om",
         "tooltip": "Skanna om efter modeller som lagts till i modellmappen eller Hugging Face-cachen utanför Voxflow"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "Efter 1 timme",
           "sec15": "Efter 15 sekunder (Felsökning)"
         }
-      },
-      "customWords": {
-        "title": "Anpassade ord",
-        "description": "Hjälp modeller som stöds att känna igen namn och specialtermer. Ungefärlig korrigering är för närvarande begränsad till ord med bokstäverna A–Z och siffror.",
-        "placeholder": "Lägg till ett ord",
-        "add": "Lägg till",
-        "remove": "Ta bort {{word}}",
-        "duplicate": "\"{{word}}\" finns redan"
       },
       "voiceActivityDetection": {
         "title": "Röstaktivitetsdetektering",
@@ -918,11 +909,6 @@
         "title": "Källkod",
         "description": "Visa källkod och bidra",
         "button": "Visa på GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Stöd utvecklingen",
-        "description": "Hjälp oss att fortsätta bygga Voxflow",
-        "button": "Donera"
       },
       "acknowledgments": {
         "title": "Tack till",

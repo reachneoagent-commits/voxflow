@@ -437,7 +437,6 @@
         "deleteFailed": "Không thể xóa một số mô hình cũ. Hãy kiểm tra nhật ký để biết chi tiết."
       },
       "rescan": {
-        "label": "Quét lại",
         "tooltip": "Quét lại các mô hình được thêm vào thư mục mô hình hoặc bộ nhớ đệm Hugging Face bên ngoài Voxflow"
       }
     },
@@ -601,14 +600,6 @@
           "hour1": "Sau 1 giờ",
           "sec15": "Sau 15 giây (Gỡ lỗi)"
         }
-      },
-      "customWords": {
-        "title": "Từ tùy chỉnh",
-        "description": "Giúp các mô hình được hỗ trợ nhận dạng tên và thuật ngữ chuyên ngành. Tính năng sửa gần đúng hiện chỉ áp dụng cho các từ sử dụng chữ cái A–Z và chữ số.",
-        "placeholder": "Thêm một từ",
-        "add": "Thêm",
-        "remove": "Xóa {{word}}",
-        "duplicate": "\"{{word}}\" đã tồn tại"
       },
       "voiceActivityDetection": {
         "title": "Phát hiện hoạt động giọng nói",
@@ -918,11 +909,6 @@
         "title": "Mã nguồn",
         "description": "Xem mã nguồn và đóng góp",
         "button": "Xem trên GitHub"
-      },
-      "supportDevelopment": {
-        "title": "Hỗ trợ phát triển",
-        "description": "Giúp chúng tôi tiếp tục xây dựng Voxflow",
-        "button": "Quyên góp"
       },
       "acknowledgments": {
         "title": "Lời cảm ơn",
