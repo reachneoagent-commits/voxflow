@@ -256,6 +256,17 @@ fn strip_replacement_lead(rest: &str) -> String {
 /// The most words one "scratch that" removes when there's no comma or full
 /// stop to mark where the last phrase began.
 const MAX_SCRATCH_WORDS: usize = 6;
+/// Words removed when nothing says how much was meant: just the last few.
+const BLIND_SCRATCH_WORDS: usize = 4;
+/// Blind removal clears the phrase instead of leaving a fragment this short.
+const MAX_FRAGMENT_WORDS: usize = 2;
+/// How far back a replacement's first word is looked for when lining it up
+/// with what it replaces ("send it to Mary" restating "send the report to John").
+const ALIGN_WINDOW_WORDS: usize = 10;
+/// Words that can't end a sentence; dropped when a removal leaves one hanging.
+const DANGLING: &[&str] = &[
+    "and", "or", "but", "so", "then", "to", "the", "a", "an", "of", "with", "for",
+];
 
 fn trim_pauses(text: &str) -> &str {
     text.trim_end_matches(|c: char| c.is_whitespace() || PUNCTUATION.contains(&c))
@@ -338,13 +349,17 @@ fn find_command(text: &str) -> Option<(usize, usize)> {
 }
 
 /// Removes the phrase said just before "scratch that" from `before`: back to
-/// the previous comma or full stop, and at most `MAX_SCRATCH_WORDS` words. Lead-in
-/// words right before the command ("no,") go with it.
+/// the previous comma or full stop. Lead-in words right before the command
+/// ("no,") go with it.
 ///
-/// When a replacement follows, it's lined up with what it replaces: if its first
-/// word also appears in the last few words, removal starts at that word
-/// ("to John, scratch that, to Mary" swaps "to John"); otherwise about as many
-/// words are removed as the replacement has, at most three.
+/// How many words go depends on what follows:
+/// - nothing says how much: the last few words (`BLIND_SCRATCH_WORDS`), or the
+///   whole phrase if that would leave only a fragment;
+/// - the replacement restates the end of the phrase ("Monday in an email" then
+///   "Tuesday in an email"): as many words as the replacement has;
+/// - the replacement starts with a word also said just before ("to John" then
+///   "to Mary"): from that word on;
+/// - otherwise: about as many words as the replacement has, at most three.
 fn drop_last_phrase(before: &str, replacement: Option<&str>) -> String {
     let mut text = trim_pauses(before).to_string();
     while let Some(last) = tokens(&text).last() {
@@ -358,51 +373,102 @@ fn drop_last_phrase(before: &str, replacement: Option<&str>) -> String {
     let mut kept = text[..phrase_start].to_string();
     let phrase = &text[phrase_start..];
     let words = tokens(phrase);
-    let window_start = words.len().saturating_sub(MAX_SCRATCH_WORDS);
+    let window_start = words.len().saturating_sub(ALIGN_WINDOW_WORDS);
 
-    let cut = match replacement {
-        None => window_start,
+    let remove = match replacement {
+        None => {
+            let remove = BLIND_SCRATCH_WORDS.min(words.len());
+            if words.len() - remove > 0 && words.len() - remove <= MAX_FRAGMENT_WORDS {
+                words.len()
+            } else {
+                remove
+            }
+        }
         Some(replacement) => {
-            let replacement_words = tokens(replacement);
-            let first = replacement_words.first().map(|t| t.word.to_lowercase());
-            let aligned = first.and_then(|first| {
+            let rw = tokens(replacement);
+            let lowered = |t: &Token<'_>| t.word.to_lowercase();
+            let shared_tail = words
+                .iter()
+                .rev()
+                .zip(rw.iter().rev())
+                .take_while(|(a, b)| lowered(a) == lowered(b))
+                .count();
+            let aligned = rw.first().and_then(|first| {
                 (window_start..words.len())
                     .rev()
-                    .find(|&i| words[i].word.to_lowercase() == first)
+                    .find(|&i| lowered(&words[i]) == lowered(first))
             });
-            aligned.unwrap_or_else(|| {
-                let n = replacement_words.len().clamp(1, 3).min(words.len());
-                words.len() - n
-            })
+            if shared_tail >= 2 {
+                rw.len().min(words.len())
+            } else if let Some(i) = aligned {
+                words.len() - i
+            } else {
+                let guess = if rw.len() > 3 { 1 } else { rw.len().max(1) };
+                guess.min(words.len())
+            }
         }
     };
+    let cut = words.len() - remove;
     if cut > 0 {
         kept.push_str(&phrase[..words[cut].start.min(phrase.len())]);
     }
-    kept.trim_end().to_string()
+    let mut kept = kept.trim_end().to_string();
+    if replacement.is_none() {
+        // Don't leave "...go home and" hanging.
+        while let Some(last) = tokens(&kept).last() {
+            if last.end != kept.len() || !DANGLING.contains(&last.word.to_lowercase().as_str()) {
+                break;
+            }
+            kept.truncate(last.start);
+            kept = kept.trim_end().to_string();
+        }
+    }
+    kept
 }
 
-/// The replacement's words up to its first pause, if there are any.
+/// "Meet at 2 o'clock tomorrow, scratch that, 3 o'clock": a number or time
+/// replaces the last number said, in place, rather than the end of the phrase.
+/// Returns the corrected text (including whatever follows the replacement).
+fn swap_number(before: &str, after: &str) -> Option<String> {
+    let rep = replacement_part(after)?;
+    let rw = tokens(rep);
+    if rw.is_empty() || rw.len() > 3 || !rw[0].word.starts_with(|c: char| c.is_ascii_digit()) {
+        return None;
+    }
+    let mut text = trim_pauses(before).to_string();
+    while let Some(last) = tokens(&text).last() {
+        if !LEAD_IN.contains(&last.word.to_lowercase().as_str()) {
+            break;
+        }
+        text.truncate(last.start);
+        text = trim_pauses(&text).to_string();
+    }
+    let phrase_start = text.rfind(PUNCTUATION).map_or(0, |i| i + 1);
+    let phrase = &text[phrase_start..];
+    let words = tokens(phrase);
+    let at = words
+        .iter()
+        .rposition(|t| t.word.starts_with(|c: char| c.is_ascii_digit()))?;
+    let last_replaced = (at + rw.len() - 1).min(words.len() - 1);
+    let prefix = format!("{}{}", &text[..phrase_start], &phrase[..words[at].start]);
+    let suffix = phrase[words[last_replaced].end..].trim_end();
+    let replacement = rep.trim();
+    let remainder = after[rep.len().min(after.len())..].trim_start();
+    let joined = format!("{}{}{}", prefix.trim_end(), " ", replacement);
+    let joined = format!("{joined}{suffix}");
+    Some(if remainder.is_empty() {
+        joined
+    } else if remainder.starts_with(PUNCTUATION) {
+        format!("{joined}{remainder}")
+    } else {
+        format!("{joined} {remainder}")
+    })
+}
+
+/// The replacement's text up to its first pause, if there is any.
 fn replacement_part(after: &str) -> Option<&str> {
     let part = after.split(PUNCTUATION).next().unwrap_or("");
-    let toks = tokens(part);
-    match toks.len() {
-        0 => None,
-        // With no pause in sight the sentence just carries on, so only the first
-        // word is the replacement ("scratch that Tuesday and then I want...").
-        n if n > 3 => Some(&part[..toks[0].end]),
-        _ => Some(part),
-    }
-}
-
-/// Removes the whole sentence before a command that is a sentence of its own
-/// ("I'll send it Monday. Never mind."): back to the previous full stop.
-fn drop_last_sentence(before: &str) -> String {
-    let text = trim_pauses(before);
-    match text.rfind(['.', '!', '?']) {
-        Some(i) => text[..=i].to_string(),
-        None => String::new(),
-    }
+    (!tokens(part).is_empty()).then_some(part)
 }
 
 fn has_words(text: &str) -> bool {
@@ -425,15 +491,24 @@ pub fn resolve_backtrack(text: &str) -> Backtrack {
         if !changed && !has_words(before) && after.is_empty() {
             return Backtrack::UndoPrevious;
         }
-        let alone = before.trim_end().ends_with(['.', '!', '?']) && {
-            let rest = current[end..].trim_start();
-            rest.is_empty() || rest.starts_with(['.', '!', '?'])
-        };
-        let kept = if alone {
-            drop_last_sentence(before)
+        // A command that is a sentence of its own ("... Monday. Scratch that.
+        // Goodbye.") is followed by new dictation, not a replacement, unless the
+        // speaker says so ("I meant ...").
+        let rest = &current[end..];
+        let standalone = rest.trim_start().starts_with(['.', '!', '?']);
+        let replacement = if standalone && !starts_with_marker(rest) {
+            None
         } else {
-            drop_last_phrase(before, replacement_part(&after))
+            replacement_part(&after)
         };
+        if replacement.is_some() {
+            if let Some(swapped) = swap_number(before, &after) {
+                current = swapped;
+                changed = true;
+                continue;
+            }
+        }
+        let kept = drop_last_phrase(before, replacement);
         current = match (kept.is_empty(), after.is_empty()) {
             (true, _) => after,
             (false, true) => kept.trim_end_matches([',', ';', ':']).to_string(),
@@ -721,7 +796,7 @@ mod tests {
             resolve_backtrack(
                 "I want to send it Monday in an email. Never mind. I meant to say Tuesday in an email. I'm trying to go"
             ),
-            Backtrack::Text("Tuesday in an email. I'm trying to go".into())
+            Backtrack::Text("I want to send it Tuesday in an email. I'm trying to go".into())
         );
         assert_eq!(
             resolve_backtrack("Hello there. I like it a lot. Scratch that. Goodbye."),
@@ -742,10 +817,61 @@ mod tests {
     }
 
     #[test]
+    fn real_dictations_heard_by_the_speech_model() {
+        let cases = [
+            (
+                "Please send the report to John by Friday afternoon. Scratch that, send it to Mary instead.",
+                "Please send it to Mary instead.",
+            ),
+            (
+                "We should meet at 2 o'clock tomorrow in the main conference room. Scratch that, 3 o'clock.",
+                "We should meet at 3 o'clock tomorrow in the main conference room.",
+            ),
+            (
+                "The weather is great today, and I plan to walk the dog before lunch. Scratch that, I plan to ride my bike.",
+                "The weather is great today, and I plan to ride my bike.",
+            ),
+            (
+                "Hello everyone, welcome to the meeting, let's get started with the agenda for today, scratch that, let's begin with introductions.",
+                "Hello everyone, welcome to the meeting, let's begin with introductions.",
+            ),
+            (
+                "I'm going to the store to buy some milk and eggs, then I'll go home and make dinner for everyone. Scratch that",
+                "I'm going to the store to buy some milk and eggs, then I'll go home",
+            ),
+            (
+                "Call me at 5, scratch that, at 6:30.",
+                "Call me at 6:30.",
+            ),
+        ];
+        for (heard, typed) in cases {
+            assert_eq!(
+                resolve_backtrack(heard),
+                Backtrack::Text(typed.into()),
+                "{heard}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_long_dictation_loses_only_the_last_few_words() {
+        let heard = "Good morning team, I wanted to give you a quick update, we finished the first phase last week. The next step is to review the numbers with finance on Thursday. I also want everyone to send me their notes by Friday, scratch that.";
+        let Backtrack::Text(typed) = resolve_backtrack(heard) else {
+            panic!("expected text")
+        };
+        assert!(typed.starts_with("Good morning team, I wanted"));
+        assert!(typed.contains("review the numbers with finance on Thursday."));
+        assert!(
+            typed.ends_with("I also want everyone to send me"),
+            "{typed}"
+        );
+    }
+
+    #[test]
     fn with_no_pause_it_removes_at_most_a_few_words() {
         assert_eq!(
             resolve_backtrack("I will go to the store and buy some milk, scratch that"),
-            Backtrack::Text("I will go to".into())
+            Backtrack::Text("I will go to the store".into())
         );
     }
 
