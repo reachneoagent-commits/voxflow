@@ -220,6 +220,9 @@ const STANDALONE: &[(&[&str], Need)] = &[
     (&["what", "i", "mean", "is"], Need::Explicit),
     (&["i", "meant", "to", "say"], Need::Explicit),
     (&["or", "rather"], Need::Explicit),
+    (&["make", "that"], Need::Explicit),
+    (&["no", "wait"], Need::Explicit),
+    (&["wait", "no"], Need::Explicit),
     (&["i", "meant"], Need::NotInfinitive),
     (&["correction"], Need::PausedAfter),
 ];
@@ -511,13 +514,22 @@ fn drop_last_phrase(before: &str, replacement: Option<&str>) -> String {
     kept
 }
 
-/// "Meet at 2 o'clock tomorrow, scratch that, 3 o'clock": a number or time
-/// replaces the last number said, in place, rather than the end of the phrase.
-/// Returns the corrected text (including whatever follows the replacement).
-fn swap_number(before: &str, after: &str) -> Option<String> {
+/// Replaces something in the middle of the phrase rather than its end:
+/// - a number or time replaces the last number said ("Meet at 2 o'clock
+///   tomorrow, scratch that, 3 o'clock");
+/// - a name replaces the last name said ("Let's eat McDonald's tomorrow, make
+///   that Burger King" or "Send it Monday, scratch that, Tuesday").
+/// Returns the corrected text, including whatever follows the replacement.
+fn swap_in_place(before: &str, after: &str) -> Option<String> {
     let rep = replacement_part(after)?;
     let rw = tokens(rep);
-    if rw.is_empty() || rw.len() > 3 || !rw[0].word.starts_with(|c: char| c.is_ascii_digit()) {
+    if rw.is_empty() || rw.len() > 4 {
+        return None;
+    }
+    let starts_digit = |t: &Token<'_>| t.word.starts_with(|c: char| c.is_ascii_digit());
+    let starts_upper = |t: &Token<'_>| t.word.starts_with(|c: char| c.is_uppercase());
+    let numeric = starts_digit(&rw[0]);
+    if !numeric && !rw.iter().all(starts_upper) {
         return None;
     }
     let mut text = trim_pauses(before).to_string();
@@ -531,16 +543,28 @@ fn swap_number(before: &str, after: &str) -> Option<String> {
     let phrase_start = text.rfind(PUNCTUATION).map_or(0, |i| i + 1);
     let phrase = &text[phrase_start..];
     let words = tokens(phrase);
-    let at = words
-        .iter()
-        .rposition(|t| t.word.starts_with(|c: char| c.is_ascii_digit()))?;
-    let last_replaced = (at + rw.len() - 1).min(words.len() - 1);
-    let prefix = format!("{}{}", &text[..phrase_start], &phrase[..words[at].start]);
-    let suffix = phrase[words[last_replaced].end..].trim_end();
+    // First and last token of the span to replace.
+    let (first, last) = if numeric {
+        let at = words.iter().rposition(starts_digit)?;
+        (at, (at + rw.len() - 1).min(words.len() - 1))
+    } else {
+        // The last run of capitalised words, skipping the sentence's first word
+        // and "I".
+        let end = words
+            .iter()
+            .rposition(|t| starts_upper(t) && t.word != "I")
+            .filter(|&i| i > 0)?;
+        let mut start = end;
+        while start > 1 && starts_upper(&words[start - 1]) && words[start - 1].word != "I" {
+            start -= 1;
+        }
+        (start, end)
+    };
+    let prefix = format!("{}{}", &text[..phrase_start], &phrase[..words[first].start]);
+    let suffix = phrase[words[last].end..].trim_end();
     let replacement = rep.trim();
     let remainder = after[rep.len().min(after.len())..].trim_start();
-    let joined = format!("{}{}{}", prefix.trim_end(), " ", replacement);
-    let joined = format!("{joined}{suffix}");
+    let joined = format!("{} {}{}", prefix.trim_end(), replacement, suffix);
     Some(if remainder.is_empty() {
         joined
     } else if remainder.starts_with(PUNCTUATION) {
@@ -587,7 +611,7 @@ pub fn resolve_backtrack(text: &str) -> Backtrack {
             replacement_part(&after)
         };
         if replacement.is_some() {
-            if let Some(swapped) = swap_number(before, &after) {
+            if let Some(swapped) = swap_in_place(before, &after) {
                 current = swapped;
                 changed = true;
                 continue;
@@ -1014,6 +1038,33 @@ mod tests {
             resolve_backtrack("We will have lunch at noon, sorry, I meant one o'clock."),
             Backtrack::Text("We will have lunch at one o'clock.".into())
         );
+    }
+
+    #[test]
+    fn a_name_replaces_the_last_name_in_place() {
+        let cases = [
+            (
+                "Let's go eat McDonald's tomorrow, make that Burger King.",
+                "Let's go eat Burger King tomorrow.",
+            ),
+            (
+                "Let's go eat McDonald's tomorrow. Scratch that, Burger King.",
+                "Let's go eat Burger King tomorrow.",
+            ),
+            ("Call John today, scratch that, Mary", "Call Mary today"),
+            (
+                "Meet Sarah on Monday, scratch that, Tuesday",
+                "Meet Sarah on Tuesday",
+            ),
+            ("Send it Monday, scratch that, Tuesday", "Send it Tuesday"),
+        ];
+        for (heard, typed) in cases {
+            assert_eq!(
+                resolve_backtrack(heard),
+                Backtrack::Text(typed.into()),
+                "{heard}"
+            );
+        }
     }
 
     #[test]

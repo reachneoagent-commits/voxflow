@@ -33,7 +33,7 @@ The process is entirely local:
 - **Dictionary**: custom words, plus replacements that swap one phrase for another ("gonna" becomes "going to")
 - **Writing styles**: Formal, Casual, Very casual or Technical, set as a default or per app
 - **Usage stats**: words this week, speaking speed and time saved on the History page
-- **Undo and corrections**: a shortcut, or fix yourself mid-sentence by saying "scratch that", "never mind", "I meant" or "or rather" ("Send it Monday, scratch that, Tuesday" types "Send it Tuesday"). The live preview updates as you speak, and History keeps what you originally said
+- **Undo and corrections**: a shortcut, or fix yourself mid-sentence by saying "scratch that", "make that", "no wait", "I meant" or "or rather" ("Let's eat McDonald's tomorrow, make that Burger King" types "Let's eat Burger King tomorrow"). The live preview updates as you speak, and History keeps what you originally said
 - **Paste by voice**: say "paste link" or "paste clipboard" while dictating to type what you copied, such as a link
 - **Ignore background voices**: an option that skips speech much quieter than yours, such as a nearby conversation
 - **Accuracy and speed labels** in the model picker
