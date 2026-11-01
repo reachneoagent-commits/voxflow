@@ -178,7 +178,16 @@ pub enum Backtrack {
 /// Words that may sit just before "scratch that" ("no, scratch that").
 const LEAD_IN: &[&str] = &["no", "wait", "sorry", "oh", "um", "uh", "hmm", "ok", "okay"];
 /// Words that introduce the replacement ("scratch that, I meant three").
-const REPLACEMENT_MARKERS: &[&str] = &["i meant", "i mean", "actually", "rather", "instead"];
+const REPLACEMENT_MARKERS: &[&str] = &[
+    "i meant to say",
+    "i mean to say",
+    "what i meant was",
+    "i meant",
+    "i mean",
+    "actually",
+    "rather",
+    "instead",
+];
 const PUNCTUATION: &[char] = &[',', '.', ';', ':', '!', '?'];
 
 struct Token<'a> {
@@ -289,18 +298,23 @@ fn find_command(text: &str) -> Option<(usize, usize)> {
             continue;
         }
         let (start, end) = (pair[0].start, pair[1].end);
-        let before_ok = match i.checked_sub(1).map(|p| &toks[p]) {
+        let prev = i.checked_sub(1).map(|p| &toks[p]);
+        // Said at the start of a clause or sentence: "...Monday. Scratch that
+        // Tuesday". That's a command even when nothing pauses after it.
+        let starts_clause = prev.is_some_and(|prev| text[prev.end..start].contains(PUNCTUATION));
+        let before_ok = match prev {
             None => true,
-            Some(prev) => {
-                text[prev.end..start].contains(PUNCTUATION)
-                    || LEAD_IN.contains(&prev.word.to_lowercase().as_str())
-            }
+            Some(prev) => starts_clause || LEAD_IN.contains(&prev.word.to_lowercase().as_str()),
         };
         let rest = &text[end..];
         let after_pause = rest.trim().is_empty() || rest.trim_start().starts_with(PUNCTUATION);
         let marker = starts_with_marker(rest);
         let echo = echoes_before(&toks, i, rest);
-        if (before_ok && (after_pause || marker)) || (marker && !rest.trim().is_empty()) || echo {
+        if starts_clause
+            || (before_ok && (after_pause || marker))
+            || (marker && !rest.trim().is_empty())
+            || echo
+        {
             keep_earliest((start, end));
             break;
         }
@@ -371,7 +385,24 @@ fn drop_last_phrase(before: &str, replacement: Option<&str>) -> String {
 /// The replacement's words up to its first pause, if there are any.
 fn replacement_part(after: &str) -> Option<&str> {
     let part = after.split(PUNCTUATION).next().unwrap_or("");
-    (!tokens(part).is_empty()).then_some(part)
+    let toks = tokens(part);
+    match toks.len() {
+        0 => None,
+        // With no pause in sight the sentence just carries on, so only the first
+        // word is the replacement ("scratch that Tuesday and then I want...").
+        n if n > 3 => Some(&part[..toks[0].end]),
+        _ => Some(part),
+    }
+}
+
+/// Removes the whole sentence before a command that is a sentence of its own
+/// ("I'll send it Monday. Never mind."): back to the previous full stop.
+fn drop_last_sentence(before: &str) -> String {
+    let text = trim_pauses(before);
+    match text.rfind(['.', '!', '?']) {
+        Some(i) => text[..=i].to_string(),
+        None => String::new(),
+    }
 }
 
 fn has_words(text: &str) -> bool {
@@ -394,7 +425,15 @@ pub fn resolve_backtrack(text: &str) -> Backtrack {
         if !changed && !has_words(before) && after.is_empty() {
             return Backtrack::UndoPrevious;
         }
-        let kept = drop_last_phrase(before, replacement_part(&after));
+        let alone = before.trim_end().ends_with(['.', '!', '?']) && {
+            let rest = current[end..].trim_start();
+            rest.is_empty() || rest.starts_with(['.', '!', '?'])
+        };
+        let kept = if alone {
+            drop_last_sentence(before)
+        } else {
+            drop_last_phrase(before, replacement_part(&after))
+        };
         current = match (kept.is_empty(), after.is_empty()) {
             (true, _) => after,
             (false, true) => kept.trim_end_matches([',', ';', ':']).to_string(),
@@ -423,10 +462,17 @@ pub fn preview_with_corrections(committed: &str, tentative: &str) -> (String, St
     {
         return (committed.to_string(), tentative.to_string());
     }
-    let shown = match resolve_backtrack(&full) {
-        Backtrack::None => return (committed.to_string(), tentative.to_string()),
-        Backtrack::Text(text) => text,
-        Backtrack::UndoPrevious | Backtrack::Discard => String::new(),
+    // A command that is the very last thing heard, with nothing after it yet,
+    // could still become a one-word swap or a whole-sentence removal. Until more
+    // arrives, just hide the command words, so the preview doesn't remove a
+    // sentence and then bring most of it back.
+    let shown = match find_command(&full) {
+        Some((start, end)) if full[end..].trim().is_empty() => full[..start].trim_end().to_string(),
+        _ => match resolve_backtrack(&full) {
+            Backtrack::None => return (committed.to_string(), tentative.to_string()),
+            Backtrack::Text(text) => text,
+            Backtrack::UndoPrevious | Backtrack::Discard => String::new(),
+        },
     };
     let common: usize = shown
         .chars()
@@ -653,6 +699,45 @@ mod tests {
         assert_eq!(
             preview_with_corrections("Meet at noon.", " Scratch that."),
             (String::new(), String::new())
+        );
+    }
+
+    #[test]
+    fn a_correction_said_as_a_new_sentence_swaps_one_word() {
+        assert_eq!(
+            resolve_backtrack(
+                "I'm gonna create a list and I'm gonna send it over in an email Monday. Scratch that Tuesday and then I want to go ahead"
+            ),
+            Backtrack::Text(
+                "I'm gonna create a list and I'm gonna send it over in an email Tuesday and then I want to go ahead"
+                    .into()
+            )
+        );
+    }
+
+    #[test]
+    fn never_mind_as_its_own_sentence_removes_the_whole_previous_sentence() {
+        assert_eq!(
+            resolve_backtrack(
+                "I want to send it Monday in an email. Never mind. I meant to say Tuesday in an email. I'm trying to go"
+            ),
+            Backtrack::Text("Tuesday in an email. I'm trying to go".into())
+        );
+        assert_eq!(
+            resolve_backtrack("Hello there. I like it a lot. Scratch that. Goodbye."),
+            Backtrack::Text("Hello there. Goodbye.".into())
+        );
+    }
+
+    #[test]
+    fn the_preview_only_hides_a_trailing_command_until_more_is_heard() {
+        assert_eq!(
+            preview_with_corrections("Send it Monday in an email. Scratch that", ""),
+            ("Send it Monday in an email.".to_string(), String::new())
+        );
+        assert_eq!(
+            preview_with_corrections("Send it in an email Monday. Scratch that Tuesday", ""),
+            ("Send it in an email ".to_string(), "Tuesday".to_string())
         );
     }
 
