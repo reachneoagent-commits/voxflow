@@ -815,6 +815,7 @@ impl ShortcutAction for TranscribeAction {
 
                             // "Scratch that": drop what was said before it, or undo
                             // the previous dictation when that's all that was said.
+                            let original_transcription = transcription.clone();
                             let transcription =
                                 match crate::text_rules::resolve_backtrack(&transcription) {
                                     crate::text_rules::Backtrack::None => transcription,
@@ -835,6 +836,9 @@ impl ShortcutAction for TranscribeAction {
                                         return;
                                     }
                                 };
+                            // Keep what was actually said when a correction changed it.
+                            let corrected_from = (transcription != original_transcription)
+                                .then_some(original_transcription);
 
                             if post_process {
                                 if use_streaming_overlay {
@@ -871,6 +875,7 @@ impl ShortcutAction for TranscribeAction {
                                     processed.post_processed_text.clone(),
                                     processed.post_process_prompt.clone(),
                                     language,
+                                    corrected_from,
                                 ) {
                                     error!("Failed to save history entry: {}", err);
                                 }
@@ -977,6 +982,7 @@ impl ShortcutAction for TranscribeAction {
                                     file_name,
                                     String::new(),
                                     post_process,
+                                    None,
                                     None,
                                     None,
                                     None,

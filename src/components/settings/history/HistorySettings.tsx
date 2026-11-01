@@ -362,6 +362,8 @@ const HistoryEntryComponent: React.FC<HistoryEntryProps> = ({
   // Pressed cancel: a running job stops after its current chunk.
   const [cancelling, setCancelling] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [copiedOriginal, setCopiedOriginal] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
 
@@ -544,6 +546,42 @@ const HistoryEntryComponent: React.FC<HistoryEntryProps> = ({
               ? t("settings.history.showLess")
               : t("settings.history.showMore")}
           </button>
+        )}
+        {!retrying && entry.corrected_from && (
+          <div className="space-y-1.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setShowOriginal(!showOriginal)}
+              className="font-medium text-ink-3 hover:text-logo-primary cursor-pointer"
+            >
+              {showOriginal
+                ? t("settings.history.corrected.hide")
+                : t("settings.history.corrected.show")}
+            </button>
+            {showOriginal && (
+              <div className="space-y-1.5 rounded-md bg-wash px-3 py-2">
+                <p className="whitespace-pre-wrap text-sm">
+                  {entry.corrected_from}
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (await copyToClipboard(entry.corrected_from ?? "")) {
+                      setCopiedOriginal(true);
+                      setTimeout(() => setCopiedOriginal(false), 2000);
+                    } else {
+                      toast.error(t("settings.history.copyError"));
+                    }
+                  }}
+                  className="font-medium text-ink-3 hover:text-logo-primary cursor-pointer"
+                >
+                  {copiedOriginal
+                    ? t("settings.history.corrected.copied")
+                    : t("settings.history.corrected.copy")}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

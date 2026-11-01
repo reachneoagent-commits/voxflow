@@ -37,12 +37,17 @@ static MIGRATIONS: &[M] = &[
 
 /// Nullable columns added outside [`MIGRATIONS`]; see
 /// [`HistoryManager::apply_migrations`].
-const ADDED_COLUMNS: &[&str] = &["source_name", "language", "language_source"];
+const ADDED_COLUMNS: &[&str] = &[
+    "source_name",
+    "language",
+    "language_source",
+    "corrected_from",
+];
 
 /// Every column a [`HistoryEntry`] is read from.
 const ENTRY_COLUMNS: &str = "id, file_name, timestamp, saved, title, transcription_text, \
     post_processed_text, post_process_prompt, post_process_requested, source_name, language, \
-    language_source";
+    language_source, corrected_from";
 
 #[derive(Clone, Debug, Serialize, Deserialize, Type)]
 pub struct PaginatedHistory {
@@ -81,6 +86,9 @@ pub struct HistoryEntry {
     pub language: Option<String>,
     /// How that language was chosen; `None` before it was recorded.
     pub language_source: Option<LanguageSource>,
+    /// What was said before a spoken correction ("scratch that") changed it, so
+    /// the original can be seen and copied. `None` when nothing was corrected.
+    pub corrected_from: Option<String>,
 }
 
 /// Dictation totals for the Home stats strip.
@@ -295,6 +303,7 @@ impl HistoryManager {
             post_process_requested: row.get("post_process_requested")?,
             source_name: row.get("source_name")?,
             language: row.get("language")?,
+            corrected_from: row.get("corrected_from")?,
             language_source: row
                 .get::<_, Option<String>>("language_source")?
                 .as_deref()
@@ -360,6 +369,7 @@ impl HistoryManager {
         post_processed_text: Option<String>,
         post_process_prompt: Option<String>,
         language: Option<LanguageDecision>,
+        corrected_from: Option<String>,
     ) -> Result<HistoryEntry> {
         let (language, language_source) = split_language(language);
         let entry = self.insert_entry(HistoryEntry {
@@ -375,6 +385,7 @@ impl HistoryManager {
             source_name: None,
             language,
             language_source,
+            corrected_from,
         })?;
 
         self.cleanup_old_entries()?;
@@ -399,6 +410,7 @@ impl HistoryManager {
             source_name: Some(source_name),
             language: None,
             language_source: None,
+            corrected_from: None,
         })
     }
 
@@ -419,8 +431,9 @@ impl HistoryManager {
                 post_process_requested,
                 source_name,
                 language,
-                language_source
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                language_source,
+                corrected_from
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
             params![
                 &entry.file_name,
                 entry.timestamp,
@@ -433,6 +446,7 @@ impl HistoryManager {
                 &entry.source_name,
                 &entry.language,
                 entry.language_source.map(LanguageSource::as_str),
+                &entry.corrected_from,
             ],
         )?;
         entry.id = conn.last_insert_rowid();
@@ -821,7 +835,8 @@ mod tests {
                 post_process_requested BOOLEAN NOT NULL DEFAULT 0,
                 source_name TEXT,
                 language TEXT,
-                language_source TEXT
+                language_source TEXT,
+                corrected_from TEXT
             );",
         )
         .expect("create transcription_history table");

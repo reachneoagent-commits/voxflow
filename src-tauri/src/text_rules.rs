@@ -252,16 +252,40 @@ fn trim_pauses(text: &str) -> &str {
     text.trim_end_matches(|c: char| c.is_whitespace() || PUNCTUATION.contains(&c))
 }
 
-/// The first spoken "scratch that" (or "undo that") that is set off like a
-/// command: after a pause or a lead-in word ("no, scratch that") and followed
-/// by a pause, the end, or the replacement ("I meant ..."). That keeps
-/// "scratch that itch" as plain speech. Returns the phrase's byte range.
+/// Whether the word right after a command also appears just before it, which
+/// marks a correction even with no pause: "the other OS operating, scratch
+/// that, operating systems".
+fn echoes_before(toks: &[Token<'_>], command_index: usize, rest: &str) -> bool {
+    tokens(rest).first().is_some_and(|next| {
+        toks[..command_index]
+            .iter()
+            .rev()
+            .take(MAX_SCRATCH_WORDS)
+            .any(|t| t.word.eq_ignore_ascii_case(next.word))
+    })
+}
+
+/// The first spoken correction command, as a byte range. Commands are
+/// "scratch that", "undo that" and "never mind", which count when set off like
+/// one: after a pause or a lead-in word ("no, scratch that") and followed by a
+/// pause, the end, or the replacement ("I meant ..."). That keeps "scratch that
+/// itch" as plain speech. "Actually" is much more common in ordinary speech, so
+/// it only counts between pauses and when what follows repeats a word just said.
 fn find_command(text: &str) -> Option<(usize, usize)> {
     let toks = tokens(text);
+    let mut found: Option<(usize, usize)> = None;
+    let mut keep_earliest = |range: (usize, usize)| {
+        if found.is_none_or(|f| range.0 < f.0) {
+            found = Some(range);
+        }
+    };
+
     for (i, pair) in toks.windows(2).enumerate() {
         let first = pair[0].word.to_lowercase();
         let second = pair[1].word.to_lowercase();
-        if !((first == "scratch" || first == "undo") && second == "that") {
+        let is_command = ((first == "scratch" || first == "undo") && second == "that")
+            || (first == "never" && second == "mind");
+        if !is_command {
             continue;
         }
         let (start, end) = (pair[0].start, pair[1].end);
@@ -275,20 +299,28 @@ fn find_command(text: &str) -> Option<(usize, usize)> {
         let rest = &text[end..];
         let after_pause = rest.trim().is_empty() || rest.trim_start().starts_with(PUNCTUATION);
         let marker = starts_with_marker(rest);
-        // Saying the same word again right after is a correction even with no
-        // pause: "the other OS operating, scratch that, operating systems".
-        let echo = tokens(rest).first().is_some_and(|next| {
-            toks[..i]
-                .iter()
-                .rev()
-                .take(MAX_SCRATCH_WORDS)
-                .any(|t| t.word.eq_ignore_ascii_case(next.word))
-        });
+        let echo = echoes_before(&toks, i, rest);
         if (before_ok && (after_pause || marker)) || (marker && !rest.trim().is_empty()) || echo {
-            return Some((start, end));
+            keep_earliest((start, end));
+            break;
         }
     }
-    None
+
+    for (i, tok) in toks.iter().enumerate() {
+        if i == 0 || !tok.word.eq_ignore_ascii_case("actually") {
+            continue;
+        }
+        let rest = &text[tok.end..];
+        let paused_before = text[toks[i - 1].end..tok.start].contains(PUNCTUATION);
+        if paused_before
+            && rest.trim_start().starts_with(PUNCTUATION)
+            && echoes_before(&toks, i, rest)
+        {
+            keep_earliest((tok.start, tok.end));
+            break;
+        }
+    }
+    found
 }
 
 /// Removes the phrase said just before "scratch that" from `before`: back to
@@ -377,6 +409,32 @@ pub fn resolve_backtrack(text: &str) -> Backtrack {
     } else {
         Backtrack::Text(current.trim().to_string())
     }
+}
+
+/// What the live preview should show: the same corrections the final text gets,
+/// so a scratched phrase disappears as it's recognised. Returns the (committed,
+/// tentative) pair, keeping as much of the committed prefix as survived.
+pub fn preview_with_corrections(committed: &str, tentative: &str) -> (String, String) {
+    let full = format!("{committed}{tentative}");
+    let lowered = full.to_lowercase();
+    if !["scratch", "undo", "never", "actually"]
+        .iter()
+        .any(|word| lowered.contains(word))
+    {
+        return (committed.to_string(), tentative.to_string());
+    }
+    let shown = match resolve_backtrack(&full) {
+        Backtrack::None => return (committed.to_string(), tentative.to_string()),
+        Backtrack::Text(text) => text,
+        Backtrack::UndoPrevious | Backtrack::Discard => String::new(),
+    };
+    let common: usize = shown
+        .chars()
+        .zip(committed.chars())
+        .take_while(|(a, b)| a == b)
+        .map(|(c, _)| c.len_utf8())
+        .sum();
+    (shown[..common].to_string(), shown[common..].to_string())
 }
 
 pub fn count_words(text: &str) -> u32 {
@@ -551,6 +609,50 @@ mod tests {
         assert_eq!(
             resolve_backtrack("I need to scratch that itch"),
             Backtrack::None
+        );
+    }
+
+    #[test]
+    fn never_mind_works_like_scratch_that() {
+        assert_eq!(
+            resolve_backtrack("Send it Monday, never mind, Tuesday"),
+            Backtrack::Text("Send it Tuesday".into())
+        );
+        assert_eq!(resolve_backtrack("Never mind."), Backtrack::UndoPrevious);
+        assert_eq!(resolve_backtrack("never mind the cost"), Backtrack::None);
+    }
+
+    #[test]
+    fn actually_only_counts_when_it_clearly_repeats_a_word() {
+        assert_eq!(
+            resolve_backtrack("Meet at two, actually, at three"),
+            Backtrack::Text("Meet at three".into())
+        );
+        assert_eq!(resolve_backtrack("I actually liked it"), Backtrack::None);
+        assert_eq!(
+            resolve_backtrack("It was good, actually, it was great"),
+            Backtrack::Text("it was great".into())
+        );
+        assert_eq!(resolve_backtrack("Actually, I liked it"), Backtrack::None);
+        assert_eq!(
+            resolve_backtrack("It is fine, actually, thanks"),
+            Backtrack::None
+        );
+    }
+
+    #[test]
+    fn the_live_preview_applies_corrections_and_keeps_the_committed_prefix() {
+        assert_eq!(
+            preview_with_corrections("Send it Monday, scratch that,", " Tuesday"),
+            ("Send it ".to_string(), "Tuesday".to_string())
+        );
+        assert_eq!(
+            preview_with_corrections("Hello there", " how are"),
+            ("Hello there".to_string(), " how are".to_string())
+        );
+        assert_eq!(
+            preview_with_corrections("Meet at noon.", " Scratch that."),
+            (String::new(), String::new())
         );
     }
 

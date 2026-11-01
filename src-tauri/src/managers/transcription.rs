@@ -1370,9 +1370,12 @@ fn agreed_language(transcripts: &[Transcript]) -> Option<String> {
 }
 
 fn emit_stream_text(app_handle: &AppHandle, committed: &str, tentative: &str) {
+    // Show spoken corrections ("scratch that") as they're recognised, so the
+    // preview matches what will be typed.
+    let (committed, tentative) = crate::text_rules::preview_with_corrections(committed, tentative);
     let _ = StreamTextEvent {
-        committed: committed.to_string(),
-        tentative: tentative.to_string(),
+        committed,
+        tentative,
     }
     .emit(app_handle);
 }
