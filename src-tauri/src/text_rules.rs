@@ -179,14 +179,49 @@ pub enum Backtrack {
 const LEAD_IN: &[&str] = &["no", "wait", "sorry", "oh", "um", "uh", "hmm", "ok", "okay"];
 /// Words that introduce the replacement ("scratch that, I meant three").
 const REPLACEMENT_MARKERS: &[&str] = &[
+    "what i meant to say was",
+    "what i meant to say is",
+    "what i meant was",
+    "what i meant is",
+    "what i mean is",
+    "let me say that again",
+    "let me rephrase",
     "i meant to say",
     "i mean to say",
-    "what i meant was",
+    "i should say",
     "i meant",
     "i mean",
+    "or rather",
+    "correction",
     "actually",
     "rather",
     "instead",
+];
+
+/// How a self-correction phrase said on its own (no "scratch that") has to be
+/// set off before it counts.
+#[derive(Clone, Copy)]
+enum Need {
+    /// The wording is explicit enough: only a pause before it.
+    Explicit,
+    /// "I meant" also starts ordinary sentences ("I meant to call"), so it must
+    /// not lead into an infinitive or "that".
+    NotInfinitive,
+    /// Needs a pause on both sides.
+    PausedAfter,
+}
+
+/// Correction phrases that work without "scratch that", longest first.
+const STANDALONE: &[(&[&str], Need)] = &[
+    (&["what", "i", "meant", "to", "say", "was"], Need::Explicit),
+    (&["what", "i", "meant", "to", "say", "is"], Need::Explicit),
+    (&["what", "i", "meant", "was"], Need::Explicit),
+    (&["what", "i", "meant", "is"], Need::Explicit),
+    (&["what", "i", "mean", "is"], Need::Explicit),
+    (&["i", "meant", "to", "say"], Need::Explicit),
+    (&["or", "rather"], Need::Explicit),
+    (&["i", "meant"], Need::NotInfinitive),
+    (&["correction"], Need::PausedAfter),
 ];
 const PUNCTUATION: &[char] = &[',', '.', ';', ':', '!', '?'];
 
@@ -263,6 +298,10 @@ const MAX_FRAGMENT_WORDS: usize = 2;
 /// How far back a replacement's first word is looked for when lining it up
 /// with what it replaces ("send it to Mary" restating "send the report to John").
 const ALIGN_WINDOW_WORDS: usize = 10;
+/// Words a time, place or person usually follows; kept when only that part is replaced.
+const PREPOSITIONS: &[&str] = &[
+    "at", "on", "in", "to", "by", "for", "from", "with", "of", "around", "about", "before", "after",
+];
 /// Words that can't end a sentence; dropped when a removal leaves one hanging.
 const DANGLING: &[&str] = &[
     "and", "or", "but", "so", "then", "to", "the", "a", "an", "of", "with", "for",
@@ -345,6 +384,38 @@ fn find_command(text: &str) -> Option<(usize, usize)> {
             break;
         }
     }
+    for (i, tok) in toks.iter().enumerate() {
+        if i == 0 {
+            continue;
+        }
+        let paused_before = text[toks[i - 1].end..tok.start].contains(PUNCTUATION);
+        if !paused_before {
+            continue;
+        }
+        for (words, need) in STANDALONE {
+            let matches = toks.len() >= i + words.len()
+                && words
+                    .iter()
+                    .enumerate()
+                    .all(|(k, w)| toks[i + k].word.eq_ignore_ascii_case(w));
+            if !matches {
+                continue;
+            }
+            let end = toks[i + words.len() - 1].end;
+            let rest = &text[end..];
+            let next = tokens(rest).first().map(|t| t.word.to_lowercase());
+            let ok = !rest.trim().is_empty()
+                && match need {
+                    Need::Explicit => true,
+                    Need::NotInfinitive => !matches!(next.as_deref(), Some("to" | "that")),
+                    Need::PausedAfter => rest.trim_start().starts_with(PUNCTUATION),
+                };
+            if ok {
+                keep_earliest((tok.start, end));
+            }
+            break;
+        }
+    }
     found
 }
 
@@ -400,11 +471,25 @@ fn drop_last_phrase(before: &str, replacement: Option<&str>) -> String {
             });
             if shared_tail >= 2 {
                 rw.len().min(words.len())
+            } else if rw.len() >= words.len() && words.len() <= ALIGN_WINDOW_WORDS {
+                // As long as what it replaces: the whole phrase was restated.
+                words.len()
             } else if let Some(i) = aligned {
                 words.len() - i
             } else {
                 let guess = if rw.len() > 3 { 1 } else { rw.len().max(1) };
-                guess.min(words.len())
+                let mut remove = guess.min(words.len());
+                // "at noon" replaced by "one o'clock": keep the "at".
+                let first_removed = &words[words.len() - remove];
+                if remove >= 2
+                    && PREPOSITIONS.contains(&lowered(first_removed).as_str())
+                    && !rw
+                        .first()
+                        .is_some_and(|f| PREPOSITIONS.contains(&lowered(f).as_str()))
+                {
+                    remove -= 1;
+                }
+                remove
             }
         }
     };
@@ -531,9 +616,17 @@ pub fn resolve_backtrack(text: &str) -> Backtrack {
 pub fn preview_with_corrections(committed: &str, tentative: &str) -> (String, String) {
     let full = format!("{committed}{tentative}");
     let lowered = full.to_lowercase();
-    if !["scratch", "undo", "never", "actually"]
-        .iter()
-        .any(|word| lowered.contains(word))
+    if ![
+        "scratch",
+        "undo",
+        "never",
+        "actually",
+        "meant",
+        "rather",
+        "correction",
+    ]
+    .iter()
+    .any(|word| lowered.contains(word))
     {
         return (committed.to_string(), tentative.to_string());
     }
@@ -864,6 +957,62 @@ mod tests {
         assert!(
             typed.ends_with("I also want everyone to send me"),
             "{typed}"
+        );
+    }
+
+    #[test]
+    fn i_meant_and_similar_phrases_correct_without_scratch_that() {
+        let cases = [
+            ("Send it Monday, I meant to say Tuesday", "Send it Tuesday"),
+            ("Send it Monday, I meant Tuesday", "Send it Tuesday"),
+            ("Meet at two, what I meant was at three", "Meet at three"),
+            ("Call John, or rather, call Mary", "call Mary"),
+            (
+                "It costs ten dollars. Correction, twelve dollars.",
+                "It costs twelve dollars.",
+            ),
+        ];
+        for (heard, typed) in cases {
+            assert_eq!(
+                resolve_backtrack(heard),
+                Backtrack::Text(typed.into()),
+                "{heard}"
+            );
+        }
+        // Ordinary uses of the same words are left alone.
+        for plain in [
+            "I meant to call you yesterday",
+            "Sorry. I meant to call you.",
+            "I meant that sincerely",
+            "The correction was small",
+        ] {
+            assert_eq!(resolve_backtrack(plain), Backtrack::None, "{plain}");
+        }
+    }
+
+    #[test]
+    fn scratch_that_with_longer_i_meant_phrases() {
+        assert_eq!(
+            resolve_backtrack("Send it Monday, scratch that, what I meant to say was Tuesday"),
+            Backtrack::Text("Send it Tuesday".into())
+        );
+        assert_eq!(
+            resolve_backtrack("Send it Monday, scratch that, I should say Tuesday"),
+            Backtrack::Text("Send it Tuesday".into())
+        );
+    }
+
+    #[test]
+    fn restating_the_whole_phrase_and_keeping_prepositions() {
+        assert_eq!(
+            resolve_backtrack(
+                "I like the blue one, scratch that, I meant to say the red one is better."
+            ),
+            Backtrack::Text("the red one is better.".into())
+        );
+        assert_eq!(
+            resolve_backtrack("We will have lunch at noon, sorry, I meant one o'clock."),
+            Backtrack::Text("We will have lunch at one o'clock.".into())
         );
     }
 

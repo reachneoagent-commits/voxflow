@@ -354,7 +354,7 @@
           },
           "undo_last": {
             "name": "Undo Last Dictation",
-            "description": "Undoes the text Voxflow just typed. You can also say “scratch that”, “never mind” or “actually” to fix yourself mid-sentence: “Send it Monday, scratch that, Tuesday” types “Send it Tuesday”. Only the last phrase is removed, and History keeps what you originally said."
+            "description": "Undoes the text Voxflow just typed. You can also fix yourself mid-sentence: say “scratch that”, “never mind”, “I meant”, “what I meant was” or “or rather”, then the right words. “Send it Monday, scratch that, Tuesday” types “Send it Tuesday”. Only the last few words are replaced, and History keeps what you originally said."
           }
         },
         "errors": {
