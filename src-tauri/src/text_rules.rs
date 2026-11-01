@@ -177,20 +177,10 @@ pub enum Backtrack {
 
 /// Words that may sit just before "scratch that" ("no, scratch that").
 const LEAD_IN: &[&str] = &["no", "wait", "sorry", "oh", "um", "uh", "hmm", "ok", "okay"];
-/// Words that introduce the replacement ("scratch that, I meant three").
+/// Words that introduce the replacement ("scratch that, actually three").
 const REPLACEMENT_MARKERS: &[&str] = &[
-    "what i meant to say was",
-    "what i meant to say is",
-    "what i meant was",
-    "what i meant is",
-    "what i mean is",
     "let me say that again",
     "let me rephrase",
-    "i meant to say",
-    "i mean to say",
-    "i should say",
-    "i meant",
-    "i mean",
     "or rather",
     "correction",
     "actually",
@@ -204,38 +194,19 @@ const REPLACEMENT_MARKERS: &[&str] = &[
 enum Need {
     /// The wording is explicit enough: only a pause before it.
     Explicit,
-    /// "I meant" also starts ordinary sentences ("I meant to call"), so it must
-    /// not lead into an infinitive or "that".
-    NotInfinitive,
     /// Needs a pause on both sides.
     PausedAfter,
 }
 
-/// Correction phrases that work without "scratch that", longest first. The flag
-/// says whether a pause (comma or full stop) must come right before the phrase;
-/// phrases that are only ever corrections don't need one, so "I meant" works
-/// even when the speech model leaves out the comma.
-const STANDALONE: &[(&[&str], Need, bool)] = &[
-    (
-        &["what", "i", "meant", "to", "say", "was"],
-        Need::Explicit,
-        false,
-    ),
-    (
-        &["what", "i", "meant", "to", "say", "is"],
-        Need::Explicit,
-        false,
-    ),
-    (&["what", "i", "meant", "was"], Need::Explicit, false),
-    (&["what", "i", "meant", "is"], Need::Explicit, false),
-    (&["what", "i", "mean", "is"], Need::Explicit, true),
-    (&["i", "meant", "to", "say"], Need::Explicit, false),
-    (&["or", "rather"], Need::Explicit, true),
-    (&["make", "that"], Need::Explicit, true),
-    (&["no", "wait"], Need::Explicit, true),
-    (&["wait", "no"], Need::Explicit, true),
-    (&["i", "meant"], Need::NotInfinitive, false),
-    (&["correction"], Need::PausedAfter, true),
+/// Correction phrases that work without "scratch that". Each needs a pause
+/// (comma or full stop) right before it, because ordinary speech uses these
+/// words too ("make that happen").
+const STANDALONE: &[(&[&str], Need)] = &[
+    (&["or", "rather"], Need::Explicit),
+    (&["make", "that"], Need::Explicit),
+    (&["no", "wait"], Need::Explicit),
+    (&["wait", "no"], Need::Explicit),
+    (&["correction"], Need::PausedAfter),
 ];
 const PUNCTUATION: &[char] = &[',', '.', ';', ':', '!', '?'];
 
@@ -284,7 +255,7 @@ fn starts_with_marker(rest: &str) -> bool {
     })
 }
 
-/// Drops leading replacement markers and punctuation: ", I meant three" -> "three".
+/// Drops leading replacement markers and punctuation: ", actually three" -> "three".
 fn strip_replacement_lead(rest: &str) -> String {
     let mut text = rest.trim_start_matches(|c: char| c.is_whitespace() || PUNCTUATION.contains(&c));
     loop {
@@ -341,7 +312,7 @@ fn echoes_before(toks: &[Token<'_>], command_index: usize, rest: &str) -> bool {
 /// The first spoken correction command, as a byte range. Commands are
 /// "scratch that", "undo that" and "never mind", which count when set off like
 /// one: after a pause or a lead-in word ("no, scratch that") and followed by a
-/// pause, the end, or the replacement ("I meant ..."). That keeps "scratch that
+/// pause, the end, or the replacement ("actually ..."). That keeps "scratch that
 /// itch" as plain speech. "Actually" is much more common in ordinary speech, so
 /// it only counts between pauses and when what follows repeats a word just said.
 fn find_command(text: &str) -> Option<(usize, usize)> {
@@ -403,10 +374,10 @@ fn find_command(text: &str) -> Option<(usize, usize)> {
             continue;
         }
         let paused_before = text[toks[i - 1].end..tok.start].contains(PUNCTUATION);
-        for (words, need, needs_pause) in STANDALONE {
-            if *needs_pause && !paused_before {
-                continue;
-            }
+        if !paused_before {
+            continue;
+        }
+        for (words, need) in STANDALONE {
             let matches = toks.len() >= i + words.len()
                 && words
                     .iter()
@@ -417,29 +388,9 @@ fn find_command(text: &str) -> Option<(usize, usize)> {
             }
             let end = toks[i + words.len() - 1].end;
             let rest = &text[end..];
-            let next = tokens(rest).first().map(|t| t.word.to_lowercase());
             let ok = !rest.trim().is_empty()
                 && match need {
                     Need::Explicit => true,
-                    Need::NotInfinitive => !matches!(
-                        next.as_deref(),
-                        Some(
-                            "to" | "that"
-                                | "it"
-                                | "him"
-                                | "her"
-                                | "them"
-                                | "us"
-                                | "you"
-                                | "me"
-                                | "what"
-                                | "nothing"
-                                | "everything"
-                                | "no"
-                                | "as"
-                                | "for"
-                        )
-                    ),
                     Need::PausedAfter => rest.trim_start().starts_with(PUNCTUATION),
                 };
             if ok {
@@ -649,7 +600,7 @@ pub fn resolve_backtrack(text: &str) -> Backtrack {
         }
         // A command that is a sentence of its own ("... Monday. Scratch that.
         // Goodbye.") is followed by new dictation, not a replacement, unless the
-        // speaker says so ("I meant ...").
+        // speaker says so ("actually ...").
         let rest = &current[end..];
         let standalone = rest.trim_start().starts_with(['.', '!', '?']);
         let replacement = if standalone && !starts_with_marker(rest) {
@@ -692,7 +643,6 @@ pub fn preview_with_corrections(committed: &str, tentative: &str) -> (String, St
         "undo",
         "never",
         "actually",
-        "meant",
         "rather",
         "correction",
     ]
@@ -834,7 +784,7 @@ mod tests {
     #[test]
     fn a_correction_replaces_the_last_phrase() {
         assert_eq!(
-            resolve_backtrack("No, scratch that, I meant three."),
+            resolve_backtrack("No, scratch that, three."),
             Backtrack::Text("three.".into())
         );
         assert_eq!(
@@ -842,11 +792,11 @@ mod tests {
             Backtrack::Text("Send it Tuesday".into())
         );
         assert_eq!(
-            resolve_backtrack("Great. Scratch that, I meant awesome"),
+            resolve_backtrack("Great. Scratch that, awesome"),
             Backtrack::Text("awesome".into())
         );
         assert_eq!(
-            resolve_backtrack("Meet at noon scratch that I meant one"),
+            resolve_backtrack("Meet at noon, scratch that, one"),
             Backtrack::Text("Meet at one".into())
         );
         assert_eq!(
@@ -866,7 +816,7 @@ mod tests {
             Backtrack::Text("Open the file in the terminal".into())
         );
         assert_eq!(
-            resolve_backtrack("Meet at noon, scratch that, I meant at one"),
+            resolve_backtrack("Meet at noon, scratch that, at one"),
             Backtrack::Text("Meet at one".into())
         );
     }
@@ -958,7 +908,7 @@ mod tests {
     fn never_mind_as_its_own_sentence_removes_the_whole_previous_sentence() {
         assert_eq!(
             resolve_backtrack(
-                "I want to send it Monday in an email. Never mind. I meant to say Tuesday in an email. I'm trying to go"
+                "I want to send it Monday in an email. Never mind. Tuesday in an email. I'm trying to go"
             ),
             Backtrack::Text("I want to send it Tuesday in an email. I'm trying to go".into())
         );
@@ -1032,57 +982,13 @@ mod tests {
     }
 
     #[test]
-    fn i_meant_and_similar_phrases_correct_without_scratch_that() {
-        let cases = [
-            ("Send it Monday, I meant to say Tuesday", "Send it Tuesday"),
-            ("Send it Monday, I meant Tuesday", "Send it Tuesday"),
-            ("Meet at two, what I meant was at three", "Meet at three"),
-            ("Call John, or rather, call Mary", "call Mary"),
-            (
-                "It costs ten dollars. Correction, twelve dollars.",
-                "It costs twelve dollars.",
-            ),
-        ];
-        for (heard, typed) in cases {
-            assert_eq!(
-                resolve_backtrack(heard),
-                Backtrack::Text(typed.into()),
-                "{heard}"
-            );
-        }
-        // Ordinary uses of the same words are left alone.
-        for plain in [
-            "I meant to call you yesterday",
-            "Sorry. I meant to call you.",
-            "I meant that sincerely",
-            "The correction was small",
-        ] {
-            assert_eq!(resolve_backtrack(plain), Backtrack::None, "{plain}");
-        }
-    }
-
-    #[test]
-    fn scratch_that_with_longer_i_meant_phrases() {
-        assert_eq!(
-            resolve_backtrack("Send it Monday, scratch that, what I meant to say was Tuesday"),
-            Backtrack::Text("Send it Tuesday".into())
-        );
-        assert_eq!(
-            resolve_backtrack("Send it Monday, scratch that, I should say Tuesday"),
-            Backtrack::Text("Send it Tuesday".into())
-        );
-    }
-
-    #[test]
     fn restating_the_whole_phrase_and_keeping_prepositions() {
         assert_eq!(
-            resolve_backtrack(
-                "I like the blue one, scratch that, I meant to say the red one is better."
-            ),
+            resolve_backtrack("I like the blue one, scratch that, the red one is better."),
             Backtrack::Text("the red one is better.".into())
         );
         assert_eq!(
-            resolve_backtrack("We will have lunch at noon, sorry, I meant one o'clock."),
+            resolve_backtrack("We will have lunch at noon, scratch that, one o'clock."),
             Backtrack::Text("We will have lunch at one o'clock.".into())
         );
     }
@@ -1115,14 +1021,29 @@ mod tests {
     }
 
     #[test]
-    fn i_meant_works_like_scratch_that_even_without_a_pause() {
+    fn a_name_swap_keeps_the_words_that_follow_it() {
+        assert_eq!(
+            resolve_backtrack("Let's meet on Monday, scratch that, Tuesday at noon."),
+            Backtrack::Text("Let's meet on Tuesday at noon.".into())
+        );
+        assert_eq!(
+            resolve_backtrack("Send it Monday, scratch that, Tuesday and then call me"),
+            Backtrack::Text("Send it Tuesday and then call me".into())
+        );
+    }
+
+    #[test]
+    fn make_that_and_no_wait_correct_without_scratch_that() {
         let cases = [
+            ("Call John, or rather, call Mary", "call Mary"),
             (
-                "Let's go eat McDonald's tomorrow I meant Burger King",
-                "Let's go eat Burger King tomorrow",
+                "It costs ten dollars. Correction, twelve dollars.",
+                "It costs twelve dollars.",
             ),
-            ("Send it Monday I meant Tuesday", "Send it Tuesday"),
-            ("Meet at two I meant three", "Meet at three"),
+            (
+                "Let's go eat McDonald's tomorrow, make that Burger King.",
+                "Let's go eat Burger King tomorrow.",
+            ),
         ];
         for (heard, typed) in cases {
             assert_eq!(
@@ -1131,26 +1052,14 @@ mod tests {
                 "{heard}"
             );
         }
+        // "I meant" is not a correction keyword: it types as said.
         for plain in [
-            "I meant it sincerely",
+            "Send it Monday, I meant Tuesday",
             "I meant to call you",
-            "I meant him, not her",
-            "She said she meant that",
+            "The correction was small",
         ] {
             assert_eq!(resolve_backtrack(plain), Backtrack::None, "{plain}");
         }
-    }
-
-    #[test]
-    fn a_name_swap_keeps_the_words_that_follow_it() {
-        assert_eq!(
-            resolve_backtrack("Let's meet on Monday I meant Tuesday at noon."),
-            Backtrack::Text("Let's meet on Tuesday at noon.".into())
-        );
-        assert_eq!(
-            resolve_backtrack("Send it Monday, scratch that, Tuesday and then call me"),
-            Backtrack::Text("Send it Tuesday and then call me".into())
-        );
     }
 
     #[test]

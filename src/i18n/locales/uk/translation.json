@@ -354,7 +354,7 @@
           },
           "undo_last": {
             "name": "Undo Last Dictation",
-            "description": "Undoes the text Voxflow just typed. You can also fix yourself mid-sentence: say “scratch that”, “make that”, “no wait”, “never mind”, “I meant” or “or rather”, then the right words. “Let’s eat McDonald’s tomorrow, make that Burger King” types “Let’s eat Burger King tomorrow”. Only the last few words are replaced, and History keeps what you originally said."
+            "description": "Undoes the text Voxflow just typed. You can also fix yourself mid-sentence: say “scratch that” (or “never mind”, “make that”, “no wait”) and then the right words. “Let’s eat McDonald’s tomorrow, scratch that, Burger King” types “Let’s eat Burger King tomorrow”. Only the last few words are replaced, and History keeps what you originally said."
           }
         },
         "errors": {
