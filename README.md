@@ -4,6 +4,8 @@
 
 Voxflow is a cross-platform desktop application that provides simple, privacy-focused speech transcription. Press a shortcut, speak, and have your words appear in any text field. This happens on your own computer without sending any information to the cloud.
 
+> Voxflow started as a fork of [Handy](https://github.com/cjpais/Handy) by CJ Pais, an open source project under the MIT license. Thank you to CJ Pais and the Handy contributors for the foundation this app is built on.
+
 ## Why Voxflow?
 
 - **Free**: Accessibility tooling belongs in everyone's hands, not behind a paywall
@@ -107,6 +109,7 @@ MIT License. See [LICENSE](LICENSE) for details. Voxflow includes code originall
 
 ## Acknowledgments
 
+- **[Handy](https://github.com/cjpais/Handy)** by CJ Pais, the open source project Voxflow was forked from
 - **Whisper** by OpenAI for the speech recognition model
 - **ggml** for an amazing cross-platform tensor library
 - **Silero** for great lightweight VAD
