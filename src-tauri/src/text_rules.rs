@@ -550,17 +550,22 @@ fn drop_last_phrase(before: &str, replacement: Option<&str>) -> String {
 ///   that Burger King" or "Send it Monday, scratch that, Tuesday").
 /// Returns the corrected text, including whatever follows the replacement.
 fn swap_in_place(before: &str, after: &str) -> Option<String> {
-    let rep = replacement_part(after)?;
-    let rw = tokens(rep);
-    if rw.is_empty() || rw.len() > 4 {
-        return None;
-    }
+    let part = replacement_part(after)?;
+    let all = tokens(part);
     let starts_digit = |t: &Token<'_>| t.word.starts_with(|c: char| c.is_ascii_digit());
     let starts_upper = |t: &Token<'_>| t.word.starts_with(|c: char| c.is_uppercase());
-    let numeric = starts_digit(&rw[0]);
-    if !numeric && !rw.iter().all(starts_upper) {
+    let numeric = all.first().is_some_and(starts_digit);
+    // A name is the leading run of capitalised words ("Tuesday" in "Tuesday at
+    // noon"); anything after it carries on as normal text.
+    let rw: Vec<Token<'_>> = if numeric {
+        all
+    } else {
+        all.into_iter().take_while(starts_upper).collect()
+    };
+    if rw.is_empty() || rw.len() > 4 || (numeric && rw.len() > 3) {
         return None;
     }
+    let rep = &part[..rw[rw.len() - 1].end];
     let mut text = trim_pauses(before).to_string();
     while let Some(last) = tokens(&text).last() {
         if !LEAD_IN.contains(&last.word.to_lowercase().as_str()) {
@@ -572,6 +577,19 @@ fn swap_in_place(before: &str, after: &str) -> Option<String> {
     let phrase_start = text.rfind(PUNCTUATION).map_or(0, |i| i + 1);
     let phrase = &text[phrase_start..];
     let words = tokens(phrase);
+    // If the replacement restates the end of the phrase ("Monday in an email"
+    // then "Tuesday in an email"), the tail logic handles it: swapping only the
+    // name would repeat those words.
+    let said_again = tokens(part);
+    let shared_tail = words
+        .iter()
+        .rev()
+        .zip(said_again.iter().rev())
+        .take_while(|(a, b)| a.word.eq_ignore_ascii_case(b.word))
+        .count();
+    if shared_tail >= 2 {
+        return None;
+    }
     // First and last token of the span to replace.
     let (first, last) = if numeric {
         let at = words.iter().rposition(starts_digit)?;
@@ -1121,6 +1139,18 @@ mod tests {
         ] {
             assert_eq!(resolve_backtrack(plain), Backtrack::None, "{plain}");
         }
+    }
+
+    #[test]
+    fn a_name_swap_keeps_the_words_that_follow_it() {
+        assert_eq!(
+            resolve_backtrack("Let's meet on Monday I meant Tuesday at noon."),
+            Backtrack::Text("Let's meet on Tuesday at noon.".into())
+        );
+        assert_eq!(
+            resolve_backtrack("Send it Monday, scratch that, Tuesday and then call me"),
+            Backtrack::Text("Send it Tuesday and then call me".into())
+        );
     }
 
     #[test]
