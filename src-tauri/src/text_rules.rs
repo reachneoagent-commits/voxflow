@@ -211,20 +211,31 @@ enum Need {
     PausedAfter,
 }
 
-/// Correction phrases that work without "scratch that", longest first.
-const STANDALONE: &[(&[&str], Need)] = &[
-    (&["what", "i", "meant", "to", "say", "was"], Need::Explicit),
-    (&["what", "i", "meant", "to", "say", "is"], Need::Explicit),
-    (&["what", "i", "meant", "was"], Need::Explicit),
-    (&["what", "i", "meant", "is"], Need::Explicit),
-    (&["what", "i", "mean", "is"], Need::Explicit),
-    (&["i", "meant", "to", "say"], Need::Explicit),
-    (&["or", "rather"], Need::Explicit),
-    (&["make", "that"], Need::Explicit),
-    (&["no", "wait"], Need::Explicit),
-    (&["wait", "no"], Need::Explicit),
-    (&["i", "meant"], Need::NotInfinitive),
-    (&["correction"], Need::PausedAfter),
+/// Correction phrases that work without "scratch that", longest first. The flag
+/// says whether a pause (comma or full stop) must come right before the phrase;
+/// phrases that are only ever corrections don't need one, so "I meant" works
+/// even when the speech model leaves out the comma.
+const STANDALONE: &[(&[&str], Need, bool)] = &[
+    (
+        &["what", "i", "meant", "to", "say", "was"],
+        Need::Explicit,
+        false,
+    ),
+    (
+        &["what", "i", "meant", "to", "say", "is"],
+        Need::Explicit,
+        false,
+    ),
+    (&["what", "i", "meant", "was"], Need::Explicit, false),
+    (&["what", "i", "meant", "is"], Need::Explicit, false),
+    (&["what", "i", "mean", "is"], Need::Explicit, true),
+    (&["i", "meant", "to", "say"], Need::Explicit, false),
+    (&["or", "rather"], Need::Explicit, true),
+    (&["make", "that"], Need::Explicit, true),
+    (&["no", "wait"], Need::Explicit, true),
+    (&["wait", "no"], Need::Explicit, true),
+    (&["i", "meant"], Need::NotInfinitive, false),
+    (&["correction"], Need::PausedAfter, true),
 ];
 const PUNCTUATION: &[char] = &[',', '.', ';', ':', '!', '?'];
 
@@ -392,10 +403,10 @@ fn find_command(text: &str) -> Option<(usize, usize)> {
             continue;
         }
         let paused_before = text[toks[i - 1].end..tok.start].contains(PUNCTUATION);
-        if !paused_before {
-            continue;
-        }
-        for (words, need) in STANDALONE {
+        for (words, need, needs_pause) in STANDALONE {
+            if *needs_pause && !paused_before {
+                continue;
+            }
             let matches = toks.len() >= i + words.len()
                 && words
                     .iter()
@@ -410,7 +421,25 @@ fn find_command(text: &str) -> Option<(usize, usize)> {
             let ok = !rest.trim().is_empty()
                 && match need {
                     Need::Explicit => true,
-                    Need::NotInfinitive => !matches!(next.as_deref(), Some("to" | "that")),
+                    Need::NotInfinitive => !matches!(
+                        next.as_deref(),
+                        Some(
+                            "to" | "that"
+                                | "it"
+                                | "him"
+                                | "her"
+                                | "them"
+                                | "us"
+                                | "you"
+                                | "me"
+                                | "what"
+                                | "nothing"
+                                | "everything"
+                                | "no"
+                                | "as"
+                                | "for"
+                        )
+                    ),
                     Need::PausedAfter => rest.trim_start().starts_with(PUNCTUATION),
                 };
             if ok {
@@ -1064,6 +1093,33 @@ mod tests {
                 Backtrack::Text(typed.into()),
                 "{heard}"
             );
+        }
+    }
+
+    #[test]
+    fn i_meant_works_like_scratch_that_even_without_a_pause() {
+        let cases = [
+            (
+                "Let's go eat McDonald's tomorrow I meant Burger King",
+                "Let's go eat Burger King tomorrow",
+            ),
+            ("Send it Monday I meant Tuesday", "Send it Tuesday"),
+            ("Meet at two I meant three", "Meet at three"),
+        ];
+        for (heard, typed) in cases {
+            assert_eq!(
+                resolve_backtrack(heard),
+                Backtrack::Text(typed.into()),
+                "{heard}"
+            );
+        }
+        for plain in [
+            "I meant it sincerely",
+            "I meant to call you",
+            "I meant him, not her",
+            "She said she meant that",
+        ] {
+            assert_eq!(resolve_backtrack(plain), Backtrack::None, "{plain}");
         }
     }
 
