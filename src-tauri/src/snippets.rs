@@ -111,6 +111,25 @@ pub fn apply_snippets_with(
     expand_phrases(text, &pairs, true)
 }
 
+/// Inserts `addition` right after the first of `phrases` found in `text`, for
+/// "check out this link" -> "check out this link https://...". Does nothing if
+/// no phrase is there or the text already holds `addition`.
+pub fn append_after_first_phrase(text: &str, phrases: &[String], addition: &str) -> String {
+    if text.contains(addition) {
+        return text.to_string();
+    }
+    let first = phrases
+        .iter()
+        .filter_map(|phrase| phrase_pattern(phrase.trim(), false))
+        .filter_map(|pattern| Regex::new(&format!("(?i){pattern}")).ok())
+        .filter_map(|regex| regex.find(text).map(|m| m.end()))
+        .min();
+    match first {
+        Some(end) => format!("{} {}{}", &text[..end], addition, &text[end..]),
+        None => text.to_string(),
+    }
+}
+
 /// Whether `phrase` was spoken in `text`. Lets callers fetch something costly or
 /// private, like the clipboard, only when it's actually asked for.
 pub fn contains_phrase(text: &str, phrase: &str) -> bool {
@@ -245,6 +264,31 @@ mod tests {
             "copy and paste the file",
             "paste clipboard"
         ));
+    }
+
+    #[test]
+    fn appends_after_the_first_matching_phrase() {
+        let phrases = vec!["this link".to_string(), "this video".to_string()];
+        assert_eq!(
+            append_after_first_phrase("Check out this link", &phrases, "https://x.com/a"),
+            "Check out this link https://x.com/a"
+        );
+        assert_eq!(
+            append_after_first_phrase(
+                "I like this video. Also this link.",
+                &phrases,
+                "https://x.com/a"
+            ),
+            "I like this video https://x.com/a. Also this link."
+        );
+        assert_eq!(
+            append_after_first_phrase("Nothing to add", &phrases, "https://x.com/a"),
+            "Nothing to add"
+        );
+        assert_eq!(
+            append_after_first_phrase("see this link https://x.com/a", &phrases, "https://x.com/a"),
+            "see this link https://x.com/a"
+        );
     }
 
     #[test]

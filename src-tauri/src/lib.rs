@@ -718,6 +718,8 @@ pub fn run(cli_args: CliArgs) {
             shortcut::list_running_apps,
             shortcut::change_clipboard_phrase_enabled_setting,
             shortcut::change_clipboard_phrases_setting,
+            shortcut::change_clipboard_link_enabled_setting,
+            shortcut::change_clipboard_link_phrases_setting,
             shortcut::change_focus_on_my_voice_setting,
             shortcut::change_chinese_script_setting,
             shortcut::change_app_language_setting,

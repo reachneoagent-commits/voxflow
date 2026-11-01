@@ -942,15 +942,15 @@
       },
       "help": {
         "title": "How snippets work",
-        "body": "A snippet is a shortcut for text you type a lot. Give it a trigger phrase and the text it stands for. Whenever you say that phrase while dictating, Voxflow types the saved text instead. Triggers aren’t case-sensitive, and the text can be as long as you like, including several lines. You can also type something you’ve copied, such as a link, by saying a phrase like “paste link” or “paste clipboard”.",
+        "body": "A snippet is a shortcut for text you type a lot. Give it a trigger phrase and the text it stands for. Whenever you say that phrase while dictating, Voxflow types the saved text instead. Triggers aren’t case-sensitive, and the text can be as long as you like, including several lines. You can also type something you’ve copied, such as a link, by saying “this link” (to add a link you copied) or “paste link” (to type any copied text).",
         "example": "Add the trigger “my address” with the text “221B Baker Street, London”. Then say “send it to my address” and Voxflow types “send it to 221B Baker Street, London”."
       },
       "clipboard": {
         "title": "Insert what you copied",
-        "description": "Say one of these phrases while you dictate and Voxflow types the text you last copied, such as a link, at that spot.",
+        "description": "Copy a link, then say “check out this link” and Voxflow adds it after the words. Or say “paste link” to type whatever text you copied.",
         "toggle": {
-          "label": "Paste by voice",
-          "description": "Turns the phrase on or off. Voxflow only looks at your clipboard when you say the phrase."
+          "label": "Paste by voice (any copied text)",
+          "description": "Say a paste phrase and Voxflow types the text you last copied in its place. Voxflow only looks at your clipboard when you say one."
         },
         "phrases": {
           "label": "Phrases that paste it",
@@ -960,6 +960,17 @@
           "reset": "Reset",
           "error": "The phrase needs at least one letter or number.",
           "duplicate": "“{{phrase}}” is already in the list."
+        },
+        "link": {
+          "toggle": {
+            "label": "Add a copied link after “this link”",
+            "description": "When you say “this link”, “the link” or similar and your clipboard holds a web address, Voxflow adds that address right after the words. It only does this for a single web address."
+          },
+          "phrases": {
+            "label": "Phrases that add the link",
+            "description": "Say one of these and the copied link follows it. “Check out this link” becomes “Check out this link https://…”.",
+            "placeholder": "Add a phrase, such as “this recipe”"
+          }
         }
       }
     },

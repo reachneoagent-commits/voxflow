@@ -201,6 +201,10 @@ const settingUpdaters: {
     commands.changeFocusOnMyVoiceSetting(value as FocusStrength),
   clipboard_phrase_enabled: (value) =>
     commands.changeClipboardPhraseEnabledSetting(value as boolean),
+  clipboard_link_enabled: (value) =>
+    commands.changeClipboardLinkEnabledSetting(value as boolean),
+  clipboard_link_phrases: (value) =>
+    commands.changeClipboardLinkPhrasesSetting(value as string[]),
   clipboard_phrases: (value) =>
     commands.changeClipboardPhrasesSetting(value as string[]),
   default_style: (value) =>

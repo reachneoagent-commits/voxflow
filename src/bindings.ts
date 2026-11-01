@@ -474,6 +474,22 @@ async changeClipboardPhrasesSetting(phrases: string[]) : Promise<Result<null, st
     else return { status: "error", error: e  as any };
 }
 },
+async changeClipboardLinkEnabledSetting(enabled: boolean) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_clipboard_link_enabled_setting", { enabled }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeClipboardLinkPhrasesSetting(phrases: string[]) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_clipboard_link_phrases_setting", { phrases }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async changeFocusOnMyVoiceSetting(strength: FocusStrength) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("change_focus_on_my_voice_setting", { strength }) };
@@ -1194,7 +1210,7 @@ focus_on_my_voice?: FocusStrength;
 /**
  * Saying any of `clipboard_phrases` while dictating types what's on the clipboard.
  */
-clipboard_phrase_enabled?: boolean; clipboard_phrases?: string[]; 
+clipboard_phrase_enabled?: boolean; clipboard_phrases?: string[]; clipboard_link_enabled?: boolean; clipboard_link_phrases?: string[]; 
 /**
  * Fresh installs default from the OS locale; existing stores are migrated
  * in `apply_settings_migrations`.

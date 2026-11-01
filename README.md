@@ -34,7 +34,7 @@ The process is entirely local:
 - **Writing styles**: Formal, Casual, Very casual or Technical, set as a default or per app
 - **Usage stats**: words this week, speaking speed and time saved on the History page
 - **Undo and corrections**: a shortcut, or fix yourself mid-sentence by saying "scratch that" (or "never mind", "make that", "no wait") and then the right words: "Let's eat McDonald's tomorrow, scratch that, Burger King" types "Let's eat Burger King tomorrow". The live preview updates as you speak, and History keeps what you originally said
-- **Paste by voice**: say "paste link" or "paste clipboard" while dictating to type what you copied, such as a link
+- **Paste by voice**: copy a link, then say "check out this link" and Voxflow adds it after the words; say "paste link" or "paste clipboard" to type any text you copied
 - **Ignore background voices**: an option that skips speech much quieter than yours, such as a nearby conversation
 - **Accuracy and speed labels** in the model picker
 

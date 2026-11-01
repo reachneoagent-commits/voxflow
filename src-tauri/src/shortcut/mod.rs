@@ -984,12 +984,7 @@ pub fn change_clipboard_phrase_enabled_setting(
     Ok(())
 }
 
-#[tauri::command]
-#[specta::specta]
-pub fn change_clipboard_phrases_setting(
-    app: AppHandle,
-    phrases: Vec<String>,
-) -> Result<(), String> {
+fn clean_phrases(phrases: Vec<String>) -> Result<Vec<String>, String> {
     if phrases.len() > 30 {
         return Err("At most 30 phrases are supported".into());
     }
@@ -1007,8 +1002,40 @@ pub fn change_clipboard_phrases_setting(
             cleaned.push(phrase);
         }
     }
+    Ok(cleaned)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_clipboard_phrases_setting(
+    app: AppHandle,
+    phrases: Vec<String>,
+) -> Result<(), String> {
+    let cleaned = clean_phrases(phrases)?;
     let mut settings = settings::get_settings(&app);
     settings.clipboard_phrases = cleaned;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_clipboard_link_enabled_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.clipboard_link_enabled = enabled;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_clipboard_link_phrases_setting(
+    app: AppHandle,
+    phrases: Vec<String>,
+) -> Result<(), String> {
+    let cleaned = clean_phrases(phrases)?;
+    let mut settings = settings::get_settings(&app);
+    settings.clipboard_link_phrases = cleaned;
     settings::write_settings(&app, settings);
     Ok(())
 }

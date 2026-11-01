@@ -435,6 +435,35 @@ fn clipboard_expansion(
         .collect()
 }
 
+/// Adds the copied link after "this link" and similar phrases. The clipboard is
+/// only read when one of the phrases was spoken, and only a single web address
+/// is used, so ordinary text on the clipboard is never inserted this way.
+fn with_copied_link(app: &AppHandle, settings: &AppSettings, text: String) -> String {
+    if !settings.clipboard_link_enabled
+        || !settings
+            .clipboard_link_phrases
+            .iter()
+            .any(|phrase| crate::snippets::contains_phrase(&text, phrase.trim()))
+    {
+        return text;
+    }
+    let Some(copied) = crate::clipboard::read_clipboard_text(app) else {
+        return text;
+    };
+    let link = copied.trim();
+    let is_link = !link.is_empty()
+        && link.len() <= 2000
+        && !link.contains(char::is_whitespace)
+        && (link.starts_with("http://")
+            || link.starts_with("https://")
+            || link.starts_with("www."));
+    if !is_link {
+        debug!("Link phrase spoken, but the clipboard doesn't hold a web address");
+        return text;
+    }
+    crate::snippets::append_after_first_phrase(&text, &settings.clipboard_link_phrases, link)
+}
+
 /// The writing style for the app being typed into, or the default one.
 fn style_for_active_app(settings: &AppSettings) -> crate::settings::WritingStyle {
     crate::active_app::frontmost()
@@ -491,6 +520,7 @@ pub(crate) async fn process_transcription_output(
         &settings.snippets,
         clipboard_expansion(app, &settings, &final_text),
     );
+    let final_text = with_copied_link(app, &settings, final_text);
 
     ProcessedTranscription {
         final_text,

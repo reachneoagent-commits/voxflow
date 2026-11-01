@@ -388,6 +388,21 @@ fn default_true() -> bool {
     true
 }
 
+fn default_clipboard_link_phrases() -> Vec<String> {
+    [
+        "this link",
+        "the link",
+        "this url",
+        "this video",
+        "this article",
+        "this page",
+        "this website",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect()
+}
+
 /// Includes the near-miss "past ..." because speech models often write "paste"
 /// that way.
 fn default_clipboard_phrases() -> Vec<String> {
@@ -617,6 +632,12 @@ pub struct AppSettings {
     pub clipboard_phrase_enabled: bool,
     #[serde(default = "default_clipboard_phrases")]
     pub clipboard_phrases: Vec<String>,
+    /// Saying one of `clipboard_link_phrases` ("check out this link") adds the
+    /// copied link right after it, when the clipboard holds a link.
+    #[serde(default = "default_true")]
+    pub clipboard_link_enabled: bool,
+    #[serde(default = "default_clipboard_link_phrases")]
+    pub clipboard_link_phrases: Vec<String>,
     /// Fresh installs default from the OS locale; existing stores are migrated
     /// in `apply_settings_migrations`.
     #[serde(default)]
@@ -1162,6 +1183,8 @@ pub fn get_default_settings() -> AppSettings {
         focus_on_my_voice: FocusStrength::default(),
         clipboard_phrase_enabled: true,
         clipboard_phrases: default_clipboard_phrases(),
+        clipboard_link_enabled: true,
+        clipboard_link_phrases: default_clipboard_link_phrases(),
         chinese_script: default_chinese_script(),
         transcribe_accelerator: TranscribeAcceleratorSetting::default(),
         transcribe_gpu_device: default_transcribe_gpu_device(),
