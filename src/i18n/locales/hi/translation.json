@@ -1074,7 +1074,11 @@
     "noOptionsFound": "कोई विकल्प नहीं मिला",
     "cancel": "Cancel",
     "save": "Save",
-    "edit": "Edit"
+    "edit": "Edit",
+    "confirmDelete": {
+      "title": "Delete this?",
+      "body": "\"{{name}}\" will be removed. This can't be undone."
+    }
   },
   "errors": {
     "loadDirectory": "फ़ोल्डर लोड करने में गड़बड़ी: {{error}}",

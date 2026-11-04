@@ -1074,7 +1074,11 @@
     "noOptionsFound": "Keine Optionen gefunden",
     "cancel": "Cancel",
     "save": "Save",
-    "edit": "Edit"
+    "edit": "Edit",
+    "confirmDelete": {
+      "title": "Delete this?",
+      "body": "\"{{name}}\" will be removed. This can't be undone."
+    }
   },
   "errors": {
     "loadDirectory": "Fehler beim Laden des Verzeichnisses: {{error}}",

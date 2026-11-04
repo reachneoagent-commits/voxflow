@@ -1074,7 +1074,11 @@
     "noOptionsFound": "Tidak ada opsi yang ditemukan",
     "cancel": "Cancel",
     "save": "Save",
-    "edit": "Edit"
+    "edit": "Edit",
+    "confirmDelete": {
+      "title": "Delete this?",
+      "body": "\"{{name}}\" will be removed. This can't be undone."
+    }
   },
   "errors": {
     "loadDirectory": "Kesalahan saat memuat direktori: {{error}}",

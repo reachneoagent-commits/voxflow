@@ -9,6 +9,7 @@ import { Input } from "../../ui/Input";
 import { Switch } from "../../ui/Switch";
 import { SettingsGroup } from "../../ui/SettingsGroup";
 import { HelpNote } from "../../ui/HelpNote";
+import { ConfirmDelete } from "../../ui/ConfirmDelete";
 
 // A fixed fallback so a missing setting never changes identity between renders.
 const NONE: never[] = [];
@@ -28,6 +29,10 @@ export const DictionarySettings: React.FC = () => {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [tab, setTab] = useState<Tab>("all");
+  const [pending, setPending] = useState<{
+    label: string;
+    remove: () => void;
+  } | null>(null);
 
   const add = () => {
     const phrase = clean(from);
@@ -162,10 +167,14 @@ export const DictionarySettings: React.FC = () => {
                   size="sm"
                   aria-label={t("common.delete")}
                   onClick={() =>
-                    updateSetting(
-                      "custom_words",
-                      words.filter((w) => w !== word),
-                    )
+                    setPending({
+                      label: word,
+                      remove: () =>
+                        updateSetting(
+                          "custom_words",
+                          words.filter((w) => w !== word),
+                        ),
+                    })
                   }
                 >
                   <Trash2 width={16} height={16} />
@@ -197,10 +206,14 @@ export const DictionarySettings: React.FC = () => {
                   size="sm"
                   aria-label={t("common.delete")}
                   onClick={() =>
-                    updateSetting(
-                      "replacements",
-                      replacements.filter((x) => x.id !== r.id),
-                    )
+                    setPending({
+                      label: `${r.from} → ${r.to}`,
+                      remove: () =>
+                        updateSetting(
+                          "replacements",
+                          replacements.filter((x) => x.id !== r.id),
+                        ),
+                    })
                   }
                 >
                   <Trash2 width={16} height={16} />
@@ -214,6 +227,14 @@ export const DictionarySettings: React.FC = () => {
             </div>
           ))}
       </SettingsGroup>
+      <ConfirmDelete
+        name={pending?.label ?? null}
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          pending?.remove();
+          setPending(null);
+        }}
+      />
     </div>
   );
 };

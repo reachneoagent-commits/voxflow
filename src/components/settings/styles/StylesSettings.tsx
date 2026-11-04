@@ -13,6 +13,7 @@ import { Button } from "../../ui/Button";
 import { Input } from "../../ui/Input";
 import { SettingsGroup } from "../../ui/SettingsGroup";
 import { HelpNote } from "../../ui/HelpNote";
+import { ConfirmDelete } from "../../ui/ConfirmDelete";
 
 // A fixed fallback so a missing setting never changes identity between renders.
 const NONE: never[] = [];
@@ -53,6 +54,7 @@ export const StylesSettings: React.FC = () => {
   const defaultStyle = getSetting("default_style") ?? "casual";
   const appStyles = getSetting("app_styles") ?? NONE;
   const [adding, setAdding] = useState(false);
+  const [pendingId, setPendingId] = useState<string | null>(null);
   const [running, setRunning] = useState<ActiveApp[]>([]);
   const [pick, setPick] = useState("");
   const [manualId, setManualId] = useState("");
@@ -102,6 +104,8 @@ export const StylesSettings: React.FC = () => {
       "app_styles",
       appStyles.map((s) => (s.id === id ? { ...s, style } : s)),
     );
+
+  const pendingStyle = appStyles.find((x) => x.id === pendingId);
 
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
@@ -176,12 +180,7 @@ export const StylesSettings: React.FC = () => {
                 variant="danger-ghost"
                 size="sm"
                 aria-label={t("common.delete")}
-                onClick={() =>
-                  updateSetting(
-                    "app_styles",
-                    appStyles.filter((x) => x.id !== s.id),
-                  )
-                }
+                onClick={() => setPendingId(s.id)}
               >
                 <Trash2 width={16} height={16} />
               </Button>
@@ -237,6 +236,18 @@ export const StylesSettings: React.FC = () => {
           </div>
         )}
       </SettingsGroup>
+      <ConfirmDelete
+        name={pendingStyle?.app_name ?? null}
+        onCancel={() => setPendingId(null)}
+        onConfirm={() => {
+          if (pendingId)
+            updateSetting(
+              "app_styles",
+              appStyles.filter((x) => x.id !== pendingId),
+            );
+          setPendingId(null);
+        }}
+      />
     </div>
   );
 };

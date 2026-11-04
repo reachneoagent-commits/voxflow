@@ -1074,7 +1074,11 @@
     "noOptionsFound": "لم يتم العثور على خيارات",
     "cancel": "Cancel",
     "save": "Save",
-    "edit": "Edit"
+    "edit": "Edit",
+    "confirmDelete": {
+      "title": "Delete this?",
+      "body": "\"{{name}}\" will be removed. This can't be undone."
+    }
   },
   "errors": {
     "loadDirectory": "خطأ في تحميل المجلد: {{error}}",

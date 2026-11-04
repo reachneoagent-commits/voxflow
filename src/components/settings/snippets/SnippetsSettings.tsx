@@ -10,6 +10,7 @@ import { Switch } from "../../ui/Switch";
 import { Textarea } from "../../ui/Textarea";
 import { SettingsGroup } from "../../ui/SettingsGroup";
 import { HelpNote } from "../../ui/HelpNote";
+import { ConfirmDelete } from "../../ui/ConfirmDelete";
 import { ClipboardPhrase } from "./ClipboardPhrase";
 
 // A fixed fallback so a missing setting never changes identity between renders.
@@ -140,6 +141,9 @@ export const SnippetsSettings: React.FC = () => {
       snippets.map((s) => (s.id === id ? { ...s, enabled } : s)),
     );
 
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const pendingSnippet = snippets.find((s) => s.id === pendingId);
+
   const remove = (id: string) =>
     updateSetting(
       "snippets",
@@ -234,7 +238,7 @@ export const SnippetsSettings: React.FC = () => {
                   variant="danger-ghost"
                   size="sm"
                   aria-label={t("common.delete")}
-                  onClick={() => remove(snippet.id)}
+                  onClick={() => setPendingId(snippet.id)}
                 >
                   <Trash2 width={16} height={16} />
                 </Button>
@@ -248,6 +252,14 @@ export const SnippetsSettings: React.FC = () => {
           ),
         )}
       </SettingsGroup>
+      <ConfirmDelete
+        name={pendingSnippet?.trigger ?? null}
+        onCancel={() => setPendingId(null)}
+        onConfirm={() => {
+          if (pendingId) remove(pendingId);
+          setPendingId(null);
+        }}
+      />
     </div>
   );
 };

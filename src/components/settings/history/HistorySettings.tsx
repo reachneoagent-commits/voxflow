@@ -35,6 +35,7 @@ import {
 import { formatDateTime } from "@/utils/dateFormat";
 import { AudioPlayer, AudioPlayerGroup } from "../../ui/AudioPlayer";
 import { Button } from "../../ui/Button";
+import { ConfirmDelete } from "../../ui/ConfirmDelete";
 import { copyToClipboard } from "./clipboard";
 import { pickAndTranscribeFiles } from "./transcribeFiles";
 
@@ -406,6 +407,12 @@ const HistoryEntryComponent: React.FC<HistoryEntryProps> = ({
     setTimeout(() => setShowCopied(false), 2000);
   };
 
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const deleteLabel =
+    entry.transcription_text.trim().slice(0, 60) ||
+    entry.source_name ||
+    t("settings.history.delete");
+
   const handleDeleteEntry = async () => {
     try {
       await deleteAudio(entry.id);
@@ -488,7 +495,7 @@ const HistoryEntryComponent: React.FC<HistoryEntryProps> = ({
             </IconButton>
           )}
           <IconButton
-            onClick={handleDeleteEntry}
+            onClick={() => setConfirmingDelete(true)}
             title={t("settings.history.delete")}
           >
             <Trash2 width={16} height={16} />
@@ -586,6 +593,14 @@ const HistoryEntryComponent: React.FC<HistoryEntryProps> = ({
       </div>
 
       <AudioPlayer onLoadRequest={handleLoadAudio} className="w-full" />
+      <ConfirmDelete
+        name={confirmingDelete ? deleteLabel : null}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={() => {
+          setConfirmingDelete(false);
+          void handleDeleteEntry();
+        }}
+      />
     </div>
   );
 };

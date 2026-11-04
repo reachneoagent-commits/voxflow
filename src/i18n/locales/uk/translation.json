@@ -1074,7 +1074,11 @@
     "noOptionsFound": "Опцій не знайдено",
     "cancel": "Cancel",
     "save": "Save",
-    "edit": "Edit"
+    "edit": "Edit",
+    "confirmDelete": {
+      "title": "Delete this?",
+      "body": "\"{{name}}\" will be removed. This can't be undone."
+    }
   },
   "errors": {
     "loadDirectory": "Помилка завантаження папки: {{error}}",

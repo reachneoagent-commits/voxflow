@@ -1074,7 +1074,11 @@
     "noOptionsFound": "未找到選項",
     "cancel": "Cancel",
     "save": "Save",
-    "edit": "Edit"
+    "edit": "Edit",
+    "confirmDelete": {
+      "title": "Delete this?",
+      "body": "\"{{name}}\" will be removed. This can't be undone."
+    }
   },
   "errors": {
     "loadDirectory": "載入目錄時發生錯誤: {{error}}",
