@@ -1130,7 +1130,12 @@
   "overlay": {
     "transcribing": "Транскрибиране...",
     "processing": "Обработка...",
-    "loadingModel": "Зареждане на модела..."
+    "loadingModel": "Зареждане на модела...",
+    "meeting": "Meeting",
+    "meetingYou": "You",
+    "meetingOthers": "Others",
+    "meetingStop": "Stop",
+    "meetingSaved": "Saved to History"
   },
   "secureInput": {
     "blockedWithCulprit_one": "{{name}} може да блокира 1 бърз клавиш",

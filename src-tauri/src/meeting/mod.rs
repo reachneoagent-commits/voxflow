@@ -5,13 +5,14 @@
 #[cfg(target_os = "macos")]
 mod system_audio_macos;
 
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
-use handy_recorder::{CollectingSink, Recorder, RecorderConfig};
+use handy_recorder::{AudioChunk, Recorder, RecorderConfig, Sink};
 use serde::Serialize;
 use specta::Type;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::audio_toolkit::save_wav_file;
 use crate::managers::history::HistoryEntry;
@@ -30,9 +31,41 @@ pub struct MeetingStatus {
     pub system_audio: bool,
 }
 
+/// Collects the microphone's audio and keeps how loud it is right now.
+struct MicSink {
+    samples: Vec<f32>,
+    level: Arc<AtomicU32>,
+}
+
+impl Sink for MicSink {
+    fn process_chunk(&mut self, chunk: AudioChunk<'_>) {
+        let real = &chunk.samples
+            [..(chunk.valid_frames * chunk.channels as usize).min(chunk.samples.len())];
+        let rms = (real.iter().map(|s| s * s).sum::<f32>() / real.len().max(1) as f32).sqrt();
+        self.level.store(rms.to_bits(), Ordering::Relaxed);
+        self.samples.extend_from_slice(real);
+    }
+}
+
+/// What the meeting bar on screen shows, many times a second.
+#[derive(Clone, Serialize)]
+struct Tick {
+    seconds: u32,
+    mic: f32,
+    system: f32,
+    system_audio: bool,
+}
+
+/// How the meeting ended, for the bar's last message.
+#[derive(Clone, Serialize)]
+struct Ended {
+    error: Option<String>,
+}
+
 struct Active {
     started: Instant,
-    mic: Recorder<CollectingSink>,
+    mic: Recorder<MicSink>,
+    mic_level: Arc<AtomicU32>,
     #[cfg(target_os = "macos")]
     system: Option<system_audio_macos::SystemAudioCapture>,
 }
@@ -69,7 +102,7 @@ impl MeetingManager {
         }
     }
 
-    pub fn start(&self) -> Result<MeetingStatus, String> {
+    pub fn start(self: &Arc<Self>, app: &AppHandle) -> Result<MeetingStatus, String> {
         let mut slot = self.lock();
         if slot.is_some() {
             return Err("A meeting is already being recorded".into());
@@ -77,8 +110,12 @@ impl MeetingManager {
 
         let mic = Recorder::open(RecorderConfig::speech())
             .map_err(|e| format!("Could not open the microphone: {e}"))?;
-        mic.start(CollectingSink::new())
-            .map_err(|e| format!("Could not start the microphone: {e}"))?;
+        let mic_level = Arc::new(AtomicU32::new(0));
+        mic.start(MicSink {
+            samples: Vec::new(),
+            level: Arc::clone(&mic_level),
+        })
+        .map_err(|e| format!("Could not start the microphone: {e}"))?;
 
         #[cfg(target_os = "macos")]
         let system = match system_audio_macos::SystemAudioCapture::start() {
@@ -93,19 +130,65 @@ impl MeetingManager {
         *slot = Some(Active {
             started: Instant::now(),
             mic,
+            mic_level,
             #[cfg(target_os = "macos")]
             system,
         });
         drop(slot);
+        crate::overlay::show_meeting_overlay(app);
+        self.spawn_ticker(app);
         Ok(self.status())
     }
 
-    /// Stops recording and returns the History entry being transcribed.
+    /// Feeds the meeting bar until the meeting ends.
+    fn spawn_ticker(self: &Arc<Self>, app: &AppHandle) {
+        let manager = Arc::clone(self);
+        let app = app.clone();
+        std::thread::spawn(move || loop {
+            let tick = match &*manager.lock() {
+                Some(active) => Tick {
+                    seconds: active.started.elapsed().as_secs() as u32,
+                    mic: f32::from_bits(active.mic_level.load(Ordering::Relaxed)),
+                    #[cfg(target_os = "macos")]
+                    system: active.system.as_ref().map_or(0.0, |s| s.level()),
+                    #[cfg(not(target_os = "macos"))]
+                    system: 0.0,
+                    #[cfg(target_os = "macos")]
+                    system_audio: active.system.is_some(),
+                    #[cfg(not(target_os = "macos"))]
+                    system_audio: false,
+                },
+                None => break,
+            };
+            let _ = app.emit_to("recording_overlay", "meeting-tick", tick);
+            std::thread::sleep(Duration::from_millis(100));
+        });
+    }
+
+    /// Stops recording and returns the History entry being transcribed. The
+    /// meeting bar says how it went, then goes away.
     pub fn stop(&self, app: &AppHandle) -> Result<HistoryEntry, String> {
+        let result = self.finish(app);
+        let _ = app.emit_to(
+            "recording_overlay",
+            "meeting-ended",
+            Ended {
+                error: result.as_ref().err().cloned(),
+            },
+        );
+        let app = app.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(2500));
+            crate::overlay::hide_recording_overlay(&app);
+        });
+        result
+    }
+
+    fn finish(&self, app: &AppHandle) -> Result<HistoryEntry, String> {
         let active = self.lock().take().ok_or("No meeting is being recorded")?;
 
         let mic = match active.mic.stop() {
-            Ok(stopped) => stopped.sink.into_samples(),
+            Ok(stopped) => stopped.sink.samples,
             Err(e) => return Err(format!("Could not stop the microphone: {e}")),
         };
         let _ = active.mic.close();
@@ -148,7 +231,7 @@ pub fn toggle(app: &AppHandle) {
                 Ok(entry) => log::info!("Meeting saved as history entry {}", entry.id),
                 Err(e) => log::warn!("Could not save the meeting: {e}"),
             }
-        } else if let Err(e) = manager.start() {
+        } else if let Err(e) = manager.start(&app) {
             log::warn!("Could not start the meeting: {e}");
         }
         crate::tray::update_tray_menu(&app);

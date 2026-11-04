@@ -1130,7 +1130,12 @@
   "overlay": {
     "transcribing": "텍스트로 변환 중...",
     "processing": "처리 중...",
-    "loadingModel": "모델 로딩 중..."
+    "loadingModel": "모델 로딩 중...",
+    "meeting": "Meeting",
+    "meetingYou": "You",
+    "meetingOthers": "Others",
+    "meetingStop": "Stop",
+    "meetingSaved": "Saved to History"
   },
   "secureInput": {
     "blockedWithCulprit_one": "{{name}}이(가) 단축키 1개를 차단하고 있을 수 있습니다",

@@ -1130,7 +1130,12 @@
   "overlay": {
     "transcribing": "S'està transcrivint...",
     "processing": "S'està processant...",
-    "loadingModel": "S'està carregant el model..."
+    "loadingModel": "S'està carregant el model...",
+    "meeting": "Meeting",
+    "meetingYou": "You",
+    "meetingOthers": "Others",
+    "meetingStop": "Stop",
+    "meetingSaved": "Saved to History"
   },
   "secureInput": {
     "blockedWithCulprit_one": "{{name}} pot estar blocant 1 drecera",

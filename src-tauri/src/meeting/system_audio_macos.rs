@@ -4,6 +4,7 @@
 
 use std::ffi::c_void;
 use std::ptr::NonNull;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
 use objc2::rc::Retained;
@@ -31,6 +32,8 @@ const FLAG_NON_INTERLEAVED: u32 = 1 << 5;
 /// Audio handed over by the Core Audio thread: mono, at the tap's own rate.
 struct Shared {
     samples: Mutex<Vec<f32>>,
+    /// Loudness of the latest block (an f32 stored as bits), for the overlay.
+    level: AtomicU32,
     channels: u32,
     interleaved: bool,
 }
@@ -121,6 +124,8 @@ unsafe extern "C-unwind" fn on_audio(
             }
         }
     }
+    let rms = (mono.iter().map(|s| s * s).sum::<f32>() / mono.len().max(1) as f32).sqrt();
+    shared.level.store(rms.to_bits(), Ordering::Relaxed);
     if let Ok(mut samples) = shared.samples.lock() {
         samples.extend_from_slice(&mono);
     }
@@ -225,6 +230,7 @@ impl SystemAudioCapture {
 
         let shared = Arc::new(Shared {
             samples: Mutex::new(Vec::new()),
+            level: AtomicU32::new(0),
             channels,
             interleaved,
         });
@@ -259,6 +265,11 @@ impl SystemAudioCapture {
             client_data,
             sample_rate,
         })
+    }
+
+    /// How loud the Mac's sound is right now, 0 (silent) to about 1.
+    pub fn level(&self) -> f32 {
+        f32::from_bits(self.shared.level.load(Ordering::Relaxed))
     }
 
     /// Stops recording and returns the mono audio at `sample_rate`.

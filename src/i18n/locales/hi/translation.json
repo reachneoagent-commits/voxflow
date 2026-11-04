@@ -1130,7 +1130,12 @@
   "overlay": {
     "transcribing": "ट्रांसक्राइब हो रहा है...",
     "processing": "प्रोसेस हो रहा है...",
-    "loadingModel": "मॉडल लोड हो रहा है..."
+    "loadingModel": "मॉडल लोड हो रहा है...",
+    "meeting": "Meeting",
+    "meetingYou": "You",
+    "meetingOthers": "Others",
+    "meetingStop": "Stop",
+    "meetingSaved": "Saved to History"
   },
   "secureInput": {
     "blockedWithCulprit_one": "{{name}} शायद 1 शॉर्टकट को ब्लॉक कर रहा है",

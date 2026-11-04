@@ -1130,7 +1130,12 @@
   "overlay": {
     "transcribing": "正在转录...",
     "processing": "处理中...",
-    "loadingModel": "正在加载模型..."
+    "loadingModel": "正在加载模型...",
+    "meeting": "Meeting",
+    "meetingYou": "You",
+    "meetingOthers": "Others",
+    "meetingStop": "Stop",
+    "meetingSaved": "Saved to History"
   },
   "secureInput": {
     "blockedWithCulprit_one": "{{name}} 可能正在阻止 1 个快捷键",

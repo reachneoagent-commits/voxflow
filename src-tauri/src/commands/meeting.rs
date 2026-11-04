@@ -9,7 +9,7 @@ pub fn start_meeting(
     app: AppHandle,
     meeting: State<'_, Arc<MeetingManager>>,
 ) -> Result<MeetingStatus, String> {
-    let status = meeting.start();
+    let status = meeting.start(&app);
     crate::tray::update_tray_menu(&app);
     status
 }
