@@ -52,15 +52,11 @@ const OVERLAY_HEIGHT: f64 = 50.0;
 // Actual is 394x118, just a little extra
 const OVERLAY_STREAM_WIDTH: f64 = 400.0;
 const OVERLAY_STREAM_HEIGHT: f64 = 120.0;
-/// The meeting bar: recording dot, timer, two level meters and a Stop button.
-const OVERLAY_MEETING_WIDTH: f64 = 340.0;
 
 /// Overlay window size (logical) for a given UI state.
 fn overlay_dimensions(state: &str) -> (f64, f64) {
     if state == "streaming" {
         (OVERLAY_STREAM_WIDTH, OVERLAY_STREAM_HEIGHT)
-    } else if state == "meeting" {
-        (OVERLAY_MEETING_WIDTH, OVERLAY_HEIGHT)
     } else {
         (OVERLAY_WIDTH, OVERLAY_HEIGHT)
     }
@@ -497,16 +493,7 @@ fn show_overlay_state(app_handle: &AppHandle, state: &str) {
     if settings.overlay_style == OverlayStyle::None {
         return;
     }
-    show_overlay_state_always(app_handle, state);
-}
 
-/// Shows the meeting bar. It ignores the overlay style: a meeting recording
-/// must always be visible on screen.
-pub fn show_meeting_overlay(app_handle: &AppHandle) {
-    show_overlay_state_always(app_handle, "meeting");
-}
-
-fn show_overlay_state_always(app_handle: &AppHandle, state: &str) {
     // The rest queries monitors and the cursor and mutates window geometry. On
     // Linux the monitor/cursor lookups hit GDK/Xlib on the process's shared X11
     // connection, which is only safe from the GTK main thread — running them on

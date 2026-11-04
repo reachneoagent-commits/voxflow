@@ -13,19 +13,7 @@ import i18n, { syncLanguageFromSettings } from "@/i18n";
 import type { ModelStateEvent } from "@/lib/types/events";
 import { getLanguageDirection } from "@/lib/utils/rtl";
 
-type OverlayState =
-  | "recording"
-  | "streaming"
-  | "transcribing"
-  | "processing"
-  | "meeting";
-
-interface MeetingTick {
-  seconds: number;
-  mic: number;
-  system: number;
-  system_audio: boolean;
-}
+type OverlayState = "recording" | "streaming" | "transcribing" | "processing";
 
 // Number of reactive bars in the waveform (the simple, smoothed style shared by
 // every overlay form). Mic levels arrive as 16 FFT buckets; we take the first N.
@@ -64,16 +52,6 @@ const RecordingOverlay: React.FC = () => {
   const [phase, setPhase] = useState<StreamPhase>("listening");
   const [workKind, setWorkKind] = useState<StreamWorkKind>("transcribing");
   const [elapsed, setElapsed] = useState(0);
-  // Meeting mode: what the bar shows, and how the meeting ended (null: still
-  // recording; "" saved; otherwise the reason it was not).
-  const [meeting, setMeeting] = useState<MeetingTick>({
-    seconds: 0,
-    mic: 0,
-    system: 0,
-    system_audio: true,
-  });
-  const [meetingEnd, setMeetingEnd] = useState<string | null>(null);
-  const [stopping, setStopping] = useState(false);
   // Bumped on each new streaming session so the Live card remounts fresh (replays
   // the pop-in, and never animates in from the previous panel's open size).
   const [session, setSession] = useState(0);
@@ -99,11 +77,6 @@ const RecordingOverlay: React.FC = () => {
         // Reset synchronously before settings I/O. A fast microphone can emit
         // recording-ready while the awaits below are in flight; resetting after
         // them would overwrite that event and leave the overlay stuck arming.
-        if (overlayState === "meeting") {
-          setMeetingEnd(null);
-          setStopping(false);
-          setMeeting({ seconds: 0, mic: 0, system: 0, system_audio: true });
-        }
         if (overlayState === "recording" || overlayState === "streaming") {
           setCaptureReady(false);
           smoothedLevelsRef.current = Array(16).fill(0);
@@ -160,15 +133,6 @@ const RecordingOverlay: React.FC = () => {
         setLevels(smoothed.slice(0, WAVE_BARS));
       });
 
-      const unlistenMeetingTick = await listen<MeetingTick>(
-        "meeting-tick",
-        (event) => setMeeting(event.payload),
-      );
-      const unlistenMeetingEnded = await listen<{ error: string | null }>(
-        "meeting-ended",
-        (event) => setMeetingEnd(event.payload.error ?? ""),
-      );
-
       const unlistenStream = await events.streamTextEvent.listen((event) => {
         setStreamText(event.payload);
       });
@@ -211,8 +175,6 @@ const RecordingOverlay: React.FC = () => {
         unlistenHide();
         unlistenReady();
         unlistenLevel();
-        unlistenMeetingTick();
-        unlistenMeetingEnded();
         unlistenStream();
         unlistenPhase();
         unlistenModel();
@@ -325,67 +287,6 @@ const RecordingOverlay: React.FC = () => {
       <div className="sbase-r">{showCancel && cancelBtn}</div>
     </div>
   );
-
-  // ---- Meeting bar: recording dot, timer, who is being heard, and Stop ----
-  if (state === "meeting") {
-    const meter = (label: string, level: number, off = false) => (
-      <div className={`mtg-meter ${off ? "off" : ""}`}>
-        <span>{label}</span>
-        <div className="mtg-track">
-          <i
-            style={{
-              width: `${off ? 0 : Math.min(100, Math.pow(level * 6, 0.6) * 100)}%`,
-            }}
-          />
-        </div>
-      </div>
-    );
-    const ended = meetingEnd !== null;
-    return (
-      <div
-        dir={direction}
-        className={`ov-stage ${position} ov-fade ${isVisible ? "show" : ""}`}
-      >
-        <div className="scard compact meeting">
-          {ended ? (
-            <div className="sbase mtg-end">
-              <span className="mtg-end-text">
-                {meetingEnd === "" ? t("overlay.meetingSaved") : meetingEnd}
-              </span>
-            </div>
-          ) : (
-            <div className="sbase mtg-row">
-              <span className="mtg-dot" />
-              <div className="mtg-title">
-                <span>{t("overlay.meeting")}</span>
-                <span className="stimer on">{fmtTime(meeting.seconds)}</span>
-              </div>
-              <div className="mtg-meters">
-                {meter(t("overlay.meetingYou"), meeting.mic)}
-                {meter(
-                  t("overlay.meetingOthers"),
-                  meeting.system,
-                  !meeting.system_audio,
-                )}
-              </div>
-              <button
-                className="mtg-stop"
-                disabled={stopping}
-                aria-label={t("overlay.meetingStop")}
-                onClick={() => {
-                  setStopping(true);
-                  void commands.stopMeeting();
-                }}
-              >
-                <i />
-                {t("overlay.meetingStop")}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   // ---- Live overlay: a pill that sculpts open into a panel ----
   if (state === "streaming") {

@@ -9,7 +9,6 @@ export { ModelsSettings } from "./models/ModelsSettings";
 export { SnippetsSettings } from "./snippets/SnippetsSettings";
 export { DictionarySettings } from "./dictionary/DictionarySettings";
 export { StylesSettings } from "./styles/StylesSettings";
-export { MeetingsSettings } from "./meetings/MeetingsSettings";
 
 // Individual setting components
 export { MicrophoneSelector } from "./MicrophoneSelector";

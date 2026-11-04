@@ -66,8 +66,6 @@ struct MenuInputs {
     downloaded_models: Vec<(String, String)>,
     locale: String,
     update_checks_enabled: bool,
-    /// A meeting is being recorded.
-    meeting: bool,
 }
 
 /// Complete description of what the tray should look like.
@@ -349,10 +347,6 @@ fn compute_desired(app: &AppHandle, icon_state: TrayIconState) -> TrayDesired {
             downloaded_models,
             locale: settings.app_language,
             update_checks_enabled: settings.update_checks_enabled,
-            meeting: app
-                .state::<Arc<crate::meeting::MeetingManager>>()
-                .status()
-                .recording,
         },
     }
 }
@@ -528,12 +522,6 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
         true,
         None::<&str>,
     )?;
-    let meeting_label = if inputs.meeting {
-        &strings.stop_meeting
-    } else {
-        &strings.start_meeting
-    };
-    let meeting_i = MenuItem::with_id(app, "toggle_meeting", meeting_label, true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", &strings.quit, true, quit_accelerator)?;
     let separator = || PredefinedMenuItem::separator(app);
 
@@ -546,7 +534,6 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
                 &separator()?,
                 &cancel_i,
                 &separator()?,
-                &meeting_i,
                 &copy_last_transcript_i,
                 &separator()?,
                 &settings_i,
@@ -586,7 +573,6 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
             &[
                 &version_i,
                 &separator()?,
-                &meeting_i,
                 &copy_last_transcript_i,
                 &separator()?,
                 &model_submenu,
@@ -727,7 +713,6 @@ mod tests {
             downloaded_models: vec![("small".to_string(), "Small".to_string())],
             locale: "en".to_string(),
             update_checks_enabled: true,
-            meeting: false,
         }
     }
 

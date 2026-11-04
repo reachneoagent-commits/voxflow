@@ -1076,17 +1076,6 @@ impl ShortcutAction for UndoLastAction {
     fn stop(&self, _app: &AppHandle, _binding_id: &str, _shortcut_str: &str) {}
 }
 
-// Start or stop recording a meeting
-struct ToggleMeetingAction;
-
-impl ShortcutAction for ToggleMeetingAction {
-    fn start(&self, app: &AppHandle, _binding_id: &str, _shortcut_str: &str) {
-        crate::meeting::toggle(app);
-    }
-
-    fn stop(&self, _app: &AppHandle, _binding_id: &str, _shortcut_str: &str) {}
-}
-
 // Test Action
 struct TestAction;
 
@@ -1130,10 +1119,6 @@ pub static ACTION_MAP: Lazy<HashMap<String, Arc<dyn ShortcutAction>>> = Lazy::ne
     map.insert(
         "undo_last".to_string(),
         Arc::new(UndoLastAction) as Arc<dyn ShortcutAction>,
-    );
-    map.insert(
-        "toggle_meeting".to_string(),
-        Arc::new(ToggleMeetingAction) as Arc<dyn ShortcutAction>,
     );
     map.insert(
         "test".to_string(),

@@ -4,7 +4,5 @@
 <dict>
   <key>NSMicrophoneUsageDescription</key>
   <string>Voxflow listens to your microphone to turn your speech into text. Audio stays on your computer.</string>
-  <key>NSAudioCaptureUsageDescription</key>
-  <string>Voxflow records the sound playing on this Mac during a meeting so it can transcribe the other people on the call. Audio stays on your computer.</string>
 </dict>
 </plist>

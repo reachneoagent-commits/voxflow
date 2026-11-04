@@ -696,23 +696,6 @@ impl HistoryManager {
         Ok(PaginatedHistory { entries, has_more })
     }
 
-    /// Recorded meetings, newest first. A meeting is the entry whose source
-    /// name starts with "Meeting " (see `meeting::MeetingManager::stop`).
-    pub fn get_meetings(&self) -> Result<Vec<HistoryEntry>> {
-        let conn = self.get_connection()?;
-        let mut stmt = conn.prepare(&format!(
-            "SELECT {ENTRY_COLUMNS}
-             FROM transcription_history
-             WHERE source_name LIKE 'Meeting %'
-             ORDER BY id DESC
-             LIMIT 500"
-        ))?;
-        let meetings = stmt
-            .query_map([], Self::map_history_entry)?
-            .collect::<std::result::Result<Vec<_>, _>>()?;
-        Ok(meetings)
-    }
-
     #[cfg(test)]
     fn get_latest_entry_with_conn(conn: &Connection) -> Result<Option<HistoryEntry>> {
         let mut stmt = conn.prepare(&format!(
