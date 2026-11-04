@@ -42,16 +42,16 @@ The process is entirely local:
 
 ## Download and install
 
-Download the installer for your system (latest version, 0.9.9), then follow the steps for your system below.
+Download the installer for your system (latest version, 0.9.10), then follow the steps for your system below.
 
 | Platform | Installer |
 | --- | --- |
-| Windows x64 | [Installer](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow_0.9.9_x64-setup.exe) |
-| Windows ARM64 | [Installer](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow_0.9.9_arm64-setup.exe) |
-| macOS Apple Silicon (M1 or newer) | [DMG](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow_0.9.9_Mac_Apple-Silicon.dmg) |
-| macOS Intel | [DMG](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow_0.9.9_Mac_Intel.dmg) |
-| Linux x64 | [AppImage](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow_0.9.9_amd64.AppImage) · [deb](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow_0.9.9_amd64.deb) · [rpm](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow-0.9.9-1.x86_64.rpm) |
-| Linux ARM64 | [AppImage](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow_0.9.9_aarch64.AppImage) · [deb](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow_0.9.9_arm64.deb) · [rpm](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.9/Voxflow-0.9.9-1.aarch64.rpm) |
+| Windows x64 | [Installer](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow_0.9.10_x64-setup.exe) |
+| Windows ARM64 | [Installer](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow_0.9.10_arm64-setup.exe) |
+| macOS Apple Silicon (M1 or newer) | [DMG](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow_0.9.10_Mac_Apple-Silicon.dmg) |
+| macOS Intel | [DMG](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow_0.9.10_Mac_Intel.dmg) |
+| Linux x64 | [AppImage](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow_0.9.10_amd64.AppImage) · [deb](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow_0.9.10_amd64.deb) · [rpm](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow-0.9.10-1.x86_64.rpm) |
+| Linux ARM64 | [AppImage](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow_0.9.10_aarch64.AppImage) · [deb](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow_0.9.10_arm64.deb) · [rpm](https://github.com/reachneoagent-commits/voxflow/releases/download/v0.9.10/Voxflow-0.9.10-1.aarch64.rpm) |
 
 Older versions are on the [Releases page](https://github.com/reachneoagent-commits/voxflow/releases).
 
