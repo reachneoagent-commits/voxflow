@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +13,9 @@ import { Button } from "../../ui/Button";
 import { Input } from "../../ui/Input";
 import { SettingsGroup } from "../../ui/SettingsGroup";
 import { HelpNote } from "../../ui/HelpNote";
+
+// A fixed fallback so a missing setting never changes identity between renders.
+const NONE: never[] = [];
 
 const STYLES: WritingStyle[] = ["formal", "casual", "very_casual", "technical"];
 
@@ -48,7 +51,7 @@ export const StylesSettings: React.FC = () => {
   const { t } = useTranslation();
   const { getSetting, updateSetting } = useSettings();
   const defaultStyle = getSetting("default_style") ?? "casual";
-  const appStyles = useMemo(() => getSetting("app_styles") ?? [], [getSetting]);
+  const appStyles = getSetting("app_styles") ?? NONE;
   const [adding, setAdding] = useState(false);
   const [running, setRunning] = useState<ActiveApp[]>([]);
   const [pick, setPick] = useState("");

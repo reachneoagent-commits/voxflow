@@ -12,6 +12,9 @@ import { SettingsGroup } from "../../ui/SettingsGroup";
 import { HelpNote } from "../../ui/HelpNote";
 import { ClipboardPhrase } from "./ClipboardPhrase";
 
+// A fixed fallback so a missing setting never changes identity between renders.
+const NONE: never[] = [];
+
 const MAX_TRIGGER = 100;
 const MAX_TEXT = 10_000;
 
@@ -108,7 +111,7 @@ const SnippetEditor: React.FC<EditorProps> = ({
 export const SnippetsSettings: React.FC = () => {
   const { t } = useTranslation();
   const { getSetting, updateSetting } = useSettings();
-  const snippets = useMemo(() => getSetting("snippets") ?? [], [getSetting]);
+  const snippets = getSetting("snippets") ?? NONE;
   const [query, setQuery] = useState("");
   // "new" opens a blank editor; an id edits that snippet in place.
   const [editing, setEditing] = useState<string | "new" | null>(null);

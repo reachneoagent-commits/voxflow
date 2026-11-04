@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +10,9 @@ import { Switch } from "../../ui/Switch";
 import { SettingsGroup } from "../../ui/SettingsGroup";
 import { HelpNote } from "../../ui/HelpNote";
 
+// A fixed fallback so a missing setting never changes identity between renders.
+const NONE: never[] = [];
+
 const MAX_PHRASE = 100;
 
 type Tab = "all" | "words" | "replacements";
@@ -20,11 +23,8 @@ const clean = (value: string) =>
 export const DictionarySettings: React.FC = () => {
   const { t } = useTranslation();
   const { getSetting, updateSetting } = useSettings();
-  const words = useMemo(() => getSetting("custom_words") ?? [], [getSetting]);
-  const replacements = useMemo(
-    () => getSetting("replacements") ?? [],
-    [getSetting],
-  );
+  const words = getSetting("custom_words") ?? NONE;
+  const replacements = getSetting("replacements") ?? NONE;
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [tab, setTab] = useState<Tab>("all");
