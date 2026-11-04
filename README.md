@@ -77,7 +77,7 @@ If step 5 doesn't show Open Anyway, run this once and open Voxflow again:
 xattr -cr /Applications/Voxflow.app
 ```
 
-After an update you may be asked to allow Microphone and Accessibility again. That's a side effect of the app being unsigned.
+Updates keep your Microphone and Accessibility permissions. If Voxflow ever keeps asking for Accessibility after an update, run `tccutil reset Accessibility com.voxflow.app` in Terminal, reopen Voxflow and click **Allow**.
 
 ### Windows
 

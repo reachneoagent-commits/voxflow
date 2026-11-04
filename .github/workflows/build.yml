@@ -218,29 +218,28 @@ jobs:
         if: ${{ inputs.target != '' && !contains(inputs.target, 'x86_64-unknown-linux-gnu') && !contains(inputs.target, 'aarch64-unknown-linux-gnu') && !contains(inputs.target, 'x86_64-pc-windows-msvc') }}
         run: rustup target add ${{ inputs.target }}
 
-      - name: import Apple Developer Certificate
-        if: contains(inputs.platform, 'macos') && inputs.sign-binaries
+      # Every Mac build is signed with the same free self-signed certificate so
+      # macOS keeps the Microphone and Accessibility permissions across updates
+      # (an ad-hoc signature changes on every build and drops them).
+      - name: Import Voxflow signing certificate
+        if: contains(inputs.platform, 'macos')
         env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          CERT: ${{ secrets.VOXFLOW_SIGNING_CERT }}
+          CERT_PASSWORD: ${{ secrets.VOXFLOW_SIGNING_CERT_PASSWORD }}
         run: |
-          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
-          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-          security set-keychain-settings -t 3600 -u build.keychain
-          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
-          security find-identity -v -p codesigning build.keychain
-
-      - name: verify certificate
-        if: contains(inputs.platform, 'macos') && inputs.sign-binaries
-        run: |
-          CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application")
-          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
-          echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
-          echo "Certificate imported."
+          KC="$RUNNER_TEMP/voxflow.keychain"
+          KP=$(uuidgen)
+          echo "$CERT" | base64 --decode > "$RUNNER_TEMP/voxflow-signing.p12"
+          security create-keychain -p "$KP" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$KP" "$KC"
+          security import "$RUNNER_TEMP/voxflow-signing.p12" -k "$KC" -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KP" "$KC"
+          security list-keychains -d user -s "$KC" login.keychain
+          openssl pkcs12 -in "$RUNNER_TEMP/voxflow-signing.p12" -clcerts -nokeys -passin "pass:$CERT_PASSWORD" -legacy 2>/dev/null | openssl x509 -out "$RUNNER_TEMP/voxflow-signing.pem" \
+            || openssl pkcs12 -in "$RUNNER_TEMP/voxflow-signing.p12" -clcerts -nokeys -passin "pass:$CERT_PASSWORD" | openssl x509 -out "$RUNNER_TEMP/voxflow-signing.pem"
+          sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain "$RUNNER_TEMP/voxflow-signing.pem"
+          security find-identity -v -p codesigning "$KC" | grep -q "Voxflow Release Signing"
 
       - name: Patch asset name pattern
         id: patch-release-name
@@ -452,6 +451,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ contains(inputs.platform, 'macos') && 'Voxflow Release Signing' || '' }}
           # The Vulkan loader and Wayland client library must come from the host
           # graphics stack. Bundling Ubuntu's copies ahead of the system libraries can
           # prevent a newer distro's Vulkan ICD or Mesa stack from loading.

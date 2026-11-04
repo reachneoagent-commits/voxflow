@@ -1,6 +1,6 @@
 [package]
 name = "voxflow"
-version = "0.9.10"
+version = "0.9.11"
 description = "Free, open source speech-to-text that works completely offline"
 authors = ["Voxflow contributors"]
 edition = "2021"
