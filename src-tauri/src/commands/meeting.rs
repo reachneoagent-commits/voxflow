@@ -5,8 +5,13 @@ use tauri::{AppHandle, State};
 
 #[tauri::command]
 #[specta::specta]
-pub fn start_meeting(meeting: State<'_, Arc<MeetingManager>>) -> Result<MeetingStatus, String> {
-    meeting.start()
+pub fn start_meeting(
+    app: AppHandle,
+    meeting: State<'_, Arc<MeetingManager>>,
+) -> Result<MeetingStatus, String> {
+    let status = meeting.start();
+    crate::tray::update_tray_menu(&app);
+    status
 }
 
 #[tauri::command]
@@ -16,9 +21,14 @@ pub async fn stop_meeting(
     meeting: State<'_, Arc<MeetingManager>>,
 ) -> Result<HistoryEntry, String> {
     let meeting = Arc::clone(&meeting);
-    tauri::async_runtime::spawn_blocking(move || meeting.stop(&app))
-        .await
-        .map_err(|e| e.to_string())?
+    let result = tauri::async_runtime::spawn_blocking({
+        let app = app.clone();
+        move || meeting.stop(&app)
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    crate::tray::update_tray_menu(&app);
+    result
 }
 
 #[tauri::command]

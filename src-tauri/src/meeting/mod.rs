@@ -151,6 +151,7 @@ pub fn toggle(app: &AppHandle) {
         } else if let Err(e) = manager.start() {
             log::warn!("Could not start the meeting: {e}");
         }
+        crate::tray::update_tray_menu(&app);
     });
 }
 

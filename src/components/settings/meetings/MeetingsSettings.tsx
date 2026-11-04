@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { commands, type MeetingStatus } from "@/bindings";
 import { Button } from "../../ui/Button";
 import { HelpNote } from "../../ui/HelpNote";
+import { SettingsGroup } from "../../ui/SettingsGroup";
+import { ShortcutInput } from "../ShortcutInput";
 
 const IDLE: MeetingStatus = {
   recording: false,
@@ -101,6 +103,9 @@ export const MeetingsSettings: React.FC = () => {
           </>
         )}
       </div>
+      <SettingsGroup>
+        <ShortcutInput shortcutId="toggle_meeting" grouped={true} />
+      </SettingsGroup>
     </div>
   );
 };

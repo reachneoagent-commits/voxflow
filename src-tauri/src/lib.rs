@@ -303,6 +303,9 @@ fn initialize_core_logic(app_handle: &AppHandle) {
                     let _ = app.emit("check-for-updates", ());
                 }
             }
+            "toggle_meeting" => {
+                meeting::toggle(app);
+            }
             "copy_last_transcript" => {
                 tray::copy_last_transcript(app);
             }
