@@ -10,6 +10,7 @@ import {
   Zap,
   BookOpen,
   Palette,
+  Users,
 } from "lucide-react";
 import VoxflowTextLogo from "./icons/VoxflowTextLogo";
 import VoxflowMark from "./icons/VoxflowMark";
@@ -24,6 +25,7 @@ import {
   SnippetsSettings,
   DictionarySettings,
   StylesSettings,
+  MeetingsSettings,
 } from "./settings";
 
 export type SidebarSection = keyof typeof SECTIONS_CONFIG;
@@ -55,6 +57,12 @@ export const SECTIONS_CONFIG = {
     labelKey: "sidebar.history",
     icon: History,
     component: HistorySettings,
+    enabled: () => true,
+  },
+  meetings: {
+    labelKey: "sidebar.meetings",
+    icon: Users,
+    component: MeetingsSettings,
     enabled: () => true,
   },
   dictionary: {

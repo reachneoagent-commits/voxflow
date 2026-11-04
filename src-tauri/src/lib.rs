@@ -16,6 +16,7 @@ mod input;
 mod language_detection;
 mod llm_client;
 mod managers;
+mod meeting;
 mod memory;
 mod overlay;
 mod paste_tx;
@@ -220,6 +221,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     app_handle.manage(history_manager.clone());
     app_handle.manage(tray::TrayState::new());
     app_handle.manage(TranscriptionJobManager::new(app_handle));
+    app_handle.manage(meeting::MeetingManager::new());
 
     // Note: Shortcuts are NOT initialized here.
     // The frontend is responsible for calling the `initialize_shortcuts` command
@@ -796,6 +798,9 @@ pub fn run(cli_args: CliArgs) {
             commands::history::retry_history_entry_transcription,
             commands::history::cancel_history_entry_transcription,
             commands::history::transcribe_file,
+            commands::meeting::start_meeting,
+            commands::meeting::stop_meeting,
+            commands::meeting::meeting_status,
             commands::history::update_history_limit,
             commands::history::update_recording_retention_period,
             helpers::clamshell::is_laptop,
@@ -892,6 +897,8 @@ pub fn run(cli_args: CliArgs) {
                 signal_handle::send_transcription_input(app, "transcribe", "CLI");
             } else if args.iter().any(|a| a == "--toggle-post-process") {
                 signal_handle::send_transcription_input(app, "transcribe_with_post_process", "CLI");
+            } else if args.iter().any(|a| a == "--toggle-meeting") {
+                meeting::toggle(app);
             } else if args.iter().any(|a| a == "--cancel") {
                 crate::utils::cancel_current_operation(app);
             } else {

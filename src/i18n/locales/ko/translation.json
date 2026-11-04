@@ -19,7 +19,8 @@
     "about": "정보",
     "snippets": "Snippets",
     "dictionary": "Dictionary",
-    "styles": "Styles"
+    "styles": "Styles",
+    "meetings": "Meetings"
   },
   "onboarding": {
     "customModelDescription": "공식 지원되지 않음",
@@ -1044,6 +1045,19 @@
         "body": "A style changes how Voxflow writes what you said: capital letters, final full stops and so on. It all happens on your computer. Pick the default style for everyone, then add apps that should use a different one. Voxflow checks which app you’re typing into when you finish speaking.",
         "example": "Set Messages to Very casual and Mail to Formal. The same sentence is typed as “see you at noon” in Messages and “See you at noon.” in Mail."
       }
+    },
+    "meetings": {
+      "help": {
+        "title": "Meeting mode",
+        "example": "Start before a call, stop when it ends",
+        "body": "Records your microphone and the sound playing on this Mac, so the other people on a call are included. When you stop, the meeting is transcribed on this computer and added to History. Nothing is uploaded."
+      },
+      "ready": "Start before your call begins. Voxflow records you and everyone you hear.",
+      "start": "Start meeting",
+      "stop": "Stop and save",
+      "recording": "Recording meeting",
+      "micOnly": "Only your microphone is being recorded. Allow system audio recording for Voxflow in System Settings → Privacy & Security to include the other people on the call.",
+      "saved": "Meeting saved. Transcribing it now; it will appear in History."
     }
   },
   "footer": {

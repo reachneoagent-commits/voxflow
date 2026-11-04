@@ -1081,6 +1081,25 @@ async transcribeFile(path: string) : Promise<Result<HistoryEntry, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async startMeeting() : Promise<Result<MeetingStatus, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("start_meeting") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async stopMeeting() : Promise<Result<HistoryEntry, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("stop_meeting") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async meetingStatus() : Promise<MeetingStatus> {
+    return await TAURI_INVOKE("meeting_status");
+},
 async updateHistoryLimit(limit: number) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("update_history_limit", { limit }) };
@@ -1210,7 +1229,12 @@ focus_on_my_voice?: FocusStrength;
 /**
  * Saying any of `clipboard_phrases` while dictating types what's on the clipboard.
  */
-clipboard_phrase_enabled?: boolean; clipboard_phrases?: string[]; clipboard_link_enabled?: boolean; clipboard_link_phrases?: string[]; 
+clipboard_phrase_enabled?: boolean; clipboard_phrases?: string[]; 
+/**
+ * Saying one of `clipboard_link_phrases` ("check out this link") adds the
+ * copied link right after it, when the clipboard holds a link.
+ */
+clipboard_link_enabled?: boolean; clipboard_link_phrases?: string[]; 
 /**
  * Fresh installs default from the OS locale; existing stores are migrated
  * in `apply_settings_migrations`.
@@ -1383,6 +1407,11 @@ export type LanguageStatus =
  */
 { kind: "auto_unavailable"; language: string; reason: AutoUnavailableReason }
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error"
+export type MeetingStatus = { recording: boolean; seconds: number; 
+/**
+ * Whether the Mac's sound output is being recorded, or only the microphone.
+ */
+system_audio: boolean }
 export type ModelInfo = { id: string; name: string; description: string; filename: string; source: ModelSource; size_mb: number; is_downloaded: boolean; is_downloading: boolean; partial_size: number; accuracy_score: number; speed_score: number; supports_translation: boolean; is_recommended: boolean; supported_languages: string[]; supports_language_selection: boolean; is_custom: boolean; supports_streaming: boolean; supports_language_detection: boolean }
 export type ModelLoadStatus = { is_loaded: boolean; current_model: string | null }
 /**
