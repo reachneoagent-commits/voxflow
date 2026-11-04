@@ -1059,7 +1059,30 @@
       "stop": "Stop and save",
       "recording": "Recording meeting",
       "micOnly": "Only your microphone is being recorded. Allow system audio recording for Voxflow in System Settings → Privacy & Security to include the other people on the call.",
-      "saved": "Meeting saved. Transcribing it now; it will appear in History."
+      "saved": "Meeting saved. Transcribing it now; it will appear in History.",
+      "list": {
+        "title": "Your meetings",
+        "empty": "No meetings yet. Start one above, and it will appear here with the full transcript.",
+        "transcribing": "Transcribing… {{percent}}%",
+        "waiting": "Waiting to be transcribed…",
+        "noText": "No speech was recognized",
+        "search": "Search meetings",
+        "noMatches": "No meetings match your search."
+      },
+      "detail": {
+        "back": "Back",
+        "you": "You",
+        "others": "Others",
+        "copy": "Copy all",
+        "save": "Save as Markdown",
+        "copied": "Transcript copied",
+        "saved": "Transcript saved"
+      },
+      "shortcut": {
+        "open": "Meeting shortcut",
+        "title": "Meeting shortcut",
+        "description": "Press this anywhere to start a meeting, and again to stop and save it."
+      }
     }
   },
   "footer": {

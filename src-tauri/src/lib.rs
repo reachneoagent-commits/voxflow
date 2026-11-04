@@ -804,6 +804,8 @@ pub fn run(cli_args: CliArgs) {
             commands::meeting::start_meeting,
             commands::meeting::stop_meeting,
             commands::meeting::meeting_status,
+            commands::meeting::get_meetings,
+            commands::meeting::save_meeting_file,
             commands::history::update_history_limit,
             commands::history::update_recording_retention_period,
             helpers::clamshell::is_laptop,

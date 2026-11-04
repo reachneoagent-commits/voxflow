@@ -1,111 +1,50 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Circle, Square } from "lucide-react";
-import { toast } from "sonner";
-import { commands, type MeetingStatus } from "@/bindings";
-import { Button } from "../../ui/Button";
-import { HelpNote } from "../../ui/HelpNote";
-import { SettingsGroup } from "../../ui/SettingsGroup";
-import { ShortcutInput } from "../ShortcutInput";
+import { Users } from "lucide-react";
+import { MeetingRecorder } from "./MeetingRecorder";
+import { MeetingList } from "./MeetingList";
+import { MeetingDetail } from "./MeetingDetail";
+import { useMeetings } from "./useMeetings";
 
-const IDLE: MeetingStatus = {
-  recording: false,
-  seconds: 0,
-  system_audio: false,
-};
-
-const clock = (total: number) => {
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  const two = (n: number) => String(n).padStart(2, "0");
-  return h > 0 ? `${h}:${two(m)}:${two(s)}` : `${two(m)}:${two(s)}`;
-};
-
+/** Meeting notes like an inbox: the meetings on the left, the one you pick
+ *  on the right. Recording starts from the top of the list. */
 export const MeetingsSettings: React.FC = () => {
   const { t } = useTranslation();
-  const [status, setStatus] = useState<MeetingStatus>(IDLE);
-  const [busy, setBusy] = useState(false);
+  const { meetings } = useMeetings();
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const refresh = useCallback(async () => {
-    setStatus(await commands.meetingStatus());
-  }, []);
-
+  // Open the newest meeting first, and move on when the open one goes away.
+  const selected = meetings?.find((m) => m.id === selectedId) ?? null;
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  useEffect(() => {
-    if (!status.recording) return;
-    const timer = setInterval(() => void refresh(), 1000);
-    return () => clearInterval(timer);
-  }, [status.recording, refresh]);
-
-  const start = async () => {
-    setBusy(true);
-    const result = await commands.startMeeting();
-    setBusy(false);
-    if (result.status === "ok") setStatus(result.data);
-    else toast.error(result.error);
-  };
-
-  const stop = async () => {
-    setBusy(true);
-    setStatus(IDLE);
-    const result = await commands.stopMeeting();
-    setBusy(false);
-    if (result.status === "ok") toast.success(t("settings.meetings.saved"));
-    else toast.error(result.error);
-  };
+    if (meetings && !selected) setSelectedId(meetings[0]?.id ?? null);
+  }, [meetings, selected]);
 
   return (
-    <div className="max-w-3xl w-full mx-auto space-y-6">
-      <HelpNote
-        title={t("settings.meetings.help.title")}
-        example={t("settings.meetings.help.example")}
-      >
-        {t("settings.meetings.help.body")}
-      </HelpNote>
-
-      <div className="flex flex-col items-center gap-4 rounded-lg border border-line px-6 py-10">
-        {status.recording ? (
-          <>
-            <div className="flex items-center gap-2 text-sm font-medium text-ink-2">
-              <Circle
-                width={10}
-                height={10}
-                className="animate-pulse fill-red-500 text-red-500"
-                aria-hidden="true"
-              />
-              {t("settings.meetings.recording")}
-            </div>
-            <div className="text-4xl font-semibold tabular-nums">
-              {clock(status.seconds)}
-            </div>
-            <Button variant="danger" size="md" onClick={stop} disabled={busy}>
-              <Square width={14} height={14} className="me-2" />
-              {t("settings.meetings.stop")}
-            </Button>
-            {!status.system_audio && (
-              <p className="text-xs text-ink-2 text-center max-w-sm">
-                {t("settings.meetings.micOnly")}
-              </p>
-            )}
-          </>
+    <div className="flex min-h-0 w-full max-w-5xl flex-1 overflow-hidden rounded-lg border border-line">
+      <aside className="flex w-72 shrink-0 flex-col border-e border-line">
+        <MeetingRecorder />
+        <MeetingList
+          meetings={meetings}
+          selectedId={selected?.id ?? null}
+          onSelect={setSelectedId}
+        />
+      </aside>
+      <main className="min-w-0 flex-1 overflow-y-auto">
+        {selected ? (
+          <MeetingDetail
+            key={selected.id}
+            meeting={selected}
+            onDeleted={() => setSelectedId(null)}
+          />
         ) : (
-          <>
-            <p className="text-sm text-ink-2 text-center max-w-sm">
-              {t("settings.meetings.ready")}
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-ink-2">
+            <Users width={28} height={28} aria-hidden="true" />
+            <p className="max-w-sm text-sm">
+              {t("settings.meetings.help.body")}
             </p>
-            <Button variant="primary" size="md" onClick={start} disabled={busy}>
-              {t("settings.meetings.start")}
-            </Button>
-          </>
+          </div>
         )}
-      </div>
-      <SettingsGroup>
-        <ShortcutInput shortcutId="toggle_meeting" grouped={true} />
-      </SettingsGroup>
+      </main>
     </div>
   );
 };

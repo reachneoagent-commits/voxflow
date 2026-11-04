@@ -1,4 +1,4 @@
-use crate::managers::history::HistoryEntry;
+use crate::managers::history::{HistoryEntry, HistoryManager};
 use crate::meeting::{MeetingManager, MeetingStatus};
 use std::sync::Arc;
 use tauri::{AppHandle, State};
@@ -35,4 +35,19 @@ pub async fn stop_meeting(
 #[specta::specta]
 pub fn meeting_status(meeting: State<'_, Arc<MeetingManager>>) -> MeetingStatus {
     meeting.status()
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn get_meetings(
+    history_manager: State<'_, Arc<HistoryManager>>,
+) -> Result<Vec<HistoryEntry>, String> {
+    history_manager.get_meetings().map_err(|e| e.to_string())
+}
+
+/// Writes a meeting's transcript to a file the user picked in a save dialog.
+#[tauri::command]
+#[specta::specta]
+pub fn save_meeting_file(path: String, contents: String) -> Result<(), String> {
+    std::fs::write(&path, contents).map_err(|e| format!("Could not save the file: {e}"))
 }

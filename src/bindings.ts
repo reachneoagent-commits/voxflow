@@ -1097,6 +1097,25 @@ async stopMeeting() : Promise<Result<HistoryEntry, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async getMeetings() : Promise<Result<HistoryEntry[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_meetings") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Writes a meeting's transcript to a file the user picked in a save dialog.
+ */
+async saveMeetingFile(path: string, contents: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_meeting_file", { path, contents }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async meetingStatus() : Promise<MeetingStatus> {
     return await TAURI_INVOKE("meeting_status");
 },
