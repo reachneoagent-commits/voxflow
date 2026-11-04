@@ -6,7 +6,7 @@ use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::cell::Cell;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -22,6 +22,7 @@ use crate::managers::history::{HistoryEntry, HistoryManager};
 use crate::managers::transcription::{
     panic_payload_message, ChunkControl, Transcription, TranscriptionManager,
 };
+use crate::meeting::turns::{Speaker, Turn};
 
 /// How often a waiting chunk checks whether dictation has finished.
 const DICTATION_POLL: Duration = Duration::from_millis(200);
@@ -90,6 +91,8 @@ pub struct TranscriptionJobManager {
     app: AppHandle,
     jobs: Mutex<Jobs>,
     wake: Condvar,
+    /// Meetings waiting to be transcribed turn by turn, by History entry.
+    meetings: Mutex<HashMap<i64, Vec<Turn>>>,
 }
 
 impl TranscriptionJobManager {
@@ -99,6 +102,7 @@ impl TranscriptionJobManager {
             app: app.clone(),
             jobs: Mutex::new(Jobs::default()),
             wake: Condvar::new(),
+            meetings: Mutex::new(HashMap::new()),
         });
         let runner = Arc::clone(&manager);
         thread::Builder::new()
@@ -117,6 +121,29 @@ impl TranscriptionJobManager {
     /// Decodes `path` into a recording, then adds it to History and queues
     /// it. The recording exists first, so no entry is ever without audio.
     pub fn transcribe_file(&self, path: PathBuf) -> Result<HistoryEntry> {
+        let entry = self.add_file(path)?;
+        info!("Queued file transcription for history entry {}", entry.id);
+        self.queue(entry.id, false);
+        Ok(entry)
+    }
+
+    /// Like `transcribe_file`, for a meeting: each turn is transcribed on its
+    /// own and labelled with who spoke it.
+    pub fn transcribe_meeting(&self, path: PathBuf, turns: Vec<Turn>) -> Result<HistoryEntry> {
+        let entry = self.add_file(path)?;
+        self.meetings
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .insert(entry.id, turns);
+        info!(
+            "Queued meeting transcription for history entry {}",
+            entry.id
+        );
+        self.queue(entry.id, false);
+        Ok(entry)
+    }
+
+    fn add_file(&self, path: PathBuf) -> Result<HistoryEntry> {
         // A malformed file may panic the decoder.
         let samples = catch_unwind(AssertUnwindSafe(|| decode_audio_file(&path))).unwrap_or_else(
             |payload| {
@@ -154,8 +181,6 @@ impl TranscriptionJobManager {
                 return Err(e);
             }
         };
-        info!("Queued file transcription for history entry {}", entry.id);
-        self.queue(entry.id, false);
         Ok(entry)
     }
 
@@ -284,6 +309,14 @@ impl TranscriptionJobManager {
         let tm = Arc::clone(&self.app.state::<Arc<TranscriptionManager>>());
         let entry = tauri::async_runtime::block_on(hm.get_entry_by_id(entry_id))?
             .ok_or_else(|| anyhow!("History entry {} not found", entry_id))?;
+        let meeting = self
+            .meetings
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .remove(&entry_id);
+        if let Some(turns) = meeting {
+            return self.run_meeting_job(&entry, turns, cancelled);
+        }
         let samples = read_wav_samples(hm.get_audio_file_path(&entry.file_name))
             .map_err(|e| anyhow!("Failed to load audio: {}", e))?;
         if samples.is_empty() {
@@ -295,6 +328,7 @@ impl TranscriptionJobManager {
             entry_id: entry.id,
             cancelled,
             percent: Cell::new(0),
+            report: true,
         };
         let Some(Transcription { text, language }) = tm.transcribe_in_chunks(samples, &control)?
         else {
@@ -327,6 +361,85 @@ impl TranscriptionJobManager {
     }
 }
 
+impl TranscriptionJobManager {
+    /// Transcribes a meeting turn by turn; the text reads "You: ..." and
+    /// "Others: ..." in the order it was spoken.
+    fn run_meeting_job(
+        &self,
+        entry: &HistoryEntry,
+        turns: Vec<Turn>,
+        cancelled: &AtomicBool,
+    ) -> Result<()> {
+        let hm = Arc::clone(&self.app.state::<Arc<HistoryManager>>());
+        let tm = Arc::clone(&self.app.state::<Arc<TranscriptionManager>>());
+        let total = turns.len().max(1);
+        let mut lines: Vec<(Speaker, String)> = Vec::new();
+        let mut language = None;
+
+        for (done, turn) in turns.into_iter().enumerate() {
+            let control = Control {
+                manager: self,
+                entry_id: entry.id,
+                cancelled,
+                percent: Cell::new(0),
+                report: false,
+            };
+            let Some(Transcription {
+                text,
+                language: spoken,
+            }) = tm.transcribe_in_chunks(turn.samples, &control)?
+            else {
+                return Ok(());
+            };
+            language = language.or(spoken);
+            if !text.trim().is_empty() {
+                let processed = tauri::async_runtime::block_on(process_transcription_output(
+                    &self.app,
+                    &text,
+                    entry.post_process_requested,
+                ));
+                lines.push((turn.speaker, processed.final_text));
+            }
+            if cancelled.load(Ordering::Acquire) {
+                return Ok(());
+            }
+            let percent = ((done + 1) * 100 / total).min(100) as u8;
+            self.emit(entry.id, TranscriptionJobStatus::Running { percent });
+        }
+
+        if lines.is_empty() {
+            return Err(anyhow!("The meeting contains no speech"));
+        }
+        hm.update_transcription(entry.id, meeting_text(&lines), None, None, language)?;
+        Ok(())
+    }
+}
+
+/// One paragraph per change of speaker.
+fn meeting_text(lines: &[(Speaker, String)]) -> String {
+    let mut paragraphs: Vec<(Speaker, String)> = Vec::new();
+    for (speaker, text) in lines {
+        match paragraphs.last_mut() {
+            Some((last, existing)) if last == speaker => {
+                existing.push(' ');
+                existing.push_str(text);
+            }
+            _ => paragraphs.push((*speaker, text.clone())),
+        }
+    }
+    paragraphs
+        .iter()
+        .map(|(speaker, text)| {
+            let who = match speaker {
+                Speaker::You => "You",
+                Speaker::Others => "Others",
+            };
+            format!("{who}: {text}")
+        })
+        .collect::<Vec<_>>()
+        .join("\n\n")
+}
+
 /// Best-effort cleanup; the caller is already reporting the failure.
 fn remove_recording(path: &Path) {
     if let Err(e) = std::fs::remove_file(path) {
@@ -346,6 +459,8 @@ struct Control<'a> {
     cancelled: &'a AtomicBool,
     /// The last percent reported; the job starts at 0.
     percent: Cell<u8>,
+    /// Whether chunk progress is reported; a meeting reports per turn.
+    report: bool,
 }
 
 impl ChunkControl for Control<'_> {
@@ -365,7 +480,7 @@ impl ChunkControl for Control<'_> {
 
     fn progress(&self, done: usize, total: usize) {
         // The chunk a cancel caught still finishes; don't report it as running.
-        if self.cancelled.load(Ordering::Acquire) {
+        if !self.report || self.cancelled.load(Ordering::Acquire) {
             return;
         }
         let percent = (done * 100 / total.max(1)).min(100) as u8;
@@ -374,5 +489,24 @@ impl ChunkControl for Control<'_> {
         }
         self.manager
             .emit(self.entry_id, TranscriptionJobStatus::Running { percent });
+    }
+}
+
+#[cfg(test)]
+mod meeting_tests {
+    use super::*;
+
+    #[test]
+    fn a_meeting_reads_as_one_paragraph_per_change_of_speaker() {
+        let lines = vec![
+            (Speaker::Others, "Hello there.".to_string()),
+            (Speaker::Others, "Can you hear me?".to_string()),
+            (Speaker::You, "Yes, loud and clear.".to_string()),
+            (Speaker::Others, "Great.".to_string()),
+        ];
+        assert_eq!(
+            meeting_text(&lines),
+            "Others: Hello there. Can you hear me?\n\nYou: Yes, loud and clear.\n\nOthers: Great."
+        );
     }
 }

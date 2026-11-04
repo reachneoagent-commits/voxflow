@@ -4,9 +4,10 @@
 
 #[cfg(target_os = "macos")]
 mod system_audio_macos;
+pub mod turns;
 
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 use handy_recorder::{AudioChunk, Recorder, RecorderConfig, Sink};
@@ -35,10 +36,13 @@ pub struct MeetingStatus {
 struct MicSink {
     samples: Vec<f32>,
     level: Arc<AtomicU32>,
+    /// When the first audio arrived, to line this track up with the call's sound.
+    first_audio: Arc<OnceLock<Instant>>,
 }
 
 impl Sink for MicSink {
     fn process_chunk(&mut self, chunk: AudioChunk<'_>) {
+        self.first_audio.get_or_init(Instant::now);
         let real = &chunk.samples
             [..(chunk.valid_frames * chunk.channels as usize).min(chunk.samples.len())];
         let rms = (real.iter().map(|s| s * s).sum::<f32>() / real.len().max(1) as f32).sqrt();
@@ -66,6 +70,7 @@ struct Active {
     started: Instant,
     mic: Recorder<MicSink>,
     mic_level: Arc<AtomicU32>,
+    mic_first_audio: Arc<OnceLock<Instant>>,
     #[cfg(target_os = "macos")]
     system: Option<system_audio_macos::SystemAudioCapture>,
 }
@@ -111,9 +116,11 @@ impl MeetingManager {
         let mic = Recorder::open(RecorderConfig::speech())
             .map_err(|e| format!("Could not open the microphone: {e}"))?;
         let mic_level = Arc::new(AtomicU32::new(0));
+        let mic_first_audio = Arc::new(OnceLock::new());
         mic.start(MicSink {
             samples: Vec::new(),
             level: Arc::clone(&mic_level),
+            first_audio: Arc::clone(&mic_first_audio),
         })
         .map_err(|e| format!("Could not start the microphone: {e}"))?;
 
@@ -131,6 +138,7 @@ impl MeetingManager {
             started: Instant::now(),
             mic,
             mic_level,
+            mic_first_audio,
             #[cfg(target_os = "macos")]
             system,
         });
@@ -194,16 +202,35 @@ impl MeetingManager {
         let _ = active.mic.close();
 
         #[cfg(target_os = "macos")]
-        let system = active.system.map(|capture| {
-            let rate = capture.sample_rate;
-            to_model_rate(&capture.stop(), rate)
-        });
+        let (system, system_started) = match active.system {
+            Some(capture) => {
+                let rate = capture.sample_rate;
+                let (samples, first) = capture.stop();
+                (Some(to_model_rate(&samples, rate)), first)
+            }
+            None => (None, None),
+        };
         #[cfg(not(target_os = "macos"))]
-        let system: Option<Vec<f32>> = None;
+        let (system, system_started): (Option<Vec<f32>>, Option<Instant>) = (None, None);
+
+        // The two sides start a moment apart (the system tap takes a while to
+        // come up), so pad the later one so both share the meeting's clock.
+        let (mic, system) = align(
+            mic,
+            system.unwrap_or_default(),
+            active.mic_first_audio.get().copied(),
+            system_started,
+        );
+        let system = Some(system);
 
         let mixed = mix(&mic, system.as_deref().unwrap_or(&[]));
         if (mixed.len() as f32 / MODEL_RATE as f32) < MIN_SECONDS {
             return Err("That recording was too short to keep".into());
+        }
+
+        let turns = turns::split(&mic, system.as_deref().unwrap_or(&[]));
+        if turns.is_empty() {
+            return Err("No speech was heard in that meeting".into());
         }
 
         let name = format!(
@@ -214,7 +241,7 @@ impl MeetingManager {
         save_wav_file(&path, &mixed).map_err(|e| e.to_string())?;
         let jobs = app.state::<Arc<TranscriptionJobManager>>();
         let entry = jobs
-            .transcribe_file(path.clone())
+            .transcribe_meeting(path.clone(), turns)
             .map_err(|e| e.to_string());
         let _ = std::fs::remove_file(&path);
         entry
@@ -256,6 +283,27 @@ fn to_model_rate(samples: &[f32], rate: u32) -> Vec<f32> {
         .collect()
 }
 
+/// Pads the side that started later with silence, so a sample at the same
+/// position in both is from the same moment.
+fn align(
+    mut mic: Vec<f32>,
+    mut system: Vec<f32>,
+    mic_first: Option<Instant>,
+    system_first: Option<Instant>,
+) -> (Vec<f32>, Vec<f32>) {
+    let (Some(mic_first), Some(system_first)) = (mic_first, system_first) else {
+        return (mic, system);
+    };
+    if system_first >= mic_first {
+        let pad = ((system_first - mic_first).as_secs_f64() * MODEL_RATE as f64) as usize;
+        system.splice(0..0, std::iter::repeat(0.0).take(pad));
+    } else {
+        let pad = ((mic_first - system_first).as_secs_f64() * MODEL_RATE as f64) as usize;
+        mic.splice(0..0, std::iter::repeat(0.0).take(pad));
+    }
+    (mic, system)
+}
+
 /// Adds the two sides together, scaled down only if they would clip.
 fn mix(mic: &[f32], system: &[f32]) -> Vec<f32> {
     let len = mic.len().max(system.len());
@@ -287,6 +335,27 @@ mod tests {
         assert_eq!(out.len(), 3);
         assert!(out.iter().all(|s| s.abs() <= 0.99 + 1e-6));
         assert!(out[2] > 0.0);
+    }
+
+    #[test]
+    fn the_side_that_started_later_is_padded_to_line_up() {
+        let start = Instant::now();
+        let later = start + Duration::from_millis(500);
+        let (mic, system) = align(
+            vec![1.0; 16_000],
+            vec![1.0; 16_000],
+            Some(start),
+            Some(later),
+        );
+        assert_eq!(mic.len(), 16_000);
+        assert_eq!(system.len(), 16_000 + 8_000);
+        assert!(system[..8_000].iter().all(|s| *s == 0.0));
+    }
+
+    #[test]
+    fn without_start_times_the_tracks_are_left_alone() {
+        let (mic, system) = align(vec![1.0; 10], vec![1.0; 20], None, None);
+        assert_eq!((mic.len(), system.len()), (10, 20));
     }
 
     #[test]

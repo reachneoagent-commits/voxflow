@@ -5,7 +5,8 @@
 use std::ffi::c_void;
 use std::ptr::NonNull;
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
+use std::time::Instant;
 
 use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
@@ -34,6 +35,8 @@ struct Shared {
     samples: Mutex<Vec<f32>>,
     /// Loudness of the latest block (an f32 stored as bits), for the overlay.
     level: AtomicU32,
+    /// When the first audio arrived, to line this track up with the microphone.
+    first_audio: OnceLock<Instant>,
     channels: u32,
     interleaved: bool,
 }
@@ -124,6 +127,7 @@ unsafe extern "C-unwind" fn on_audio(
             }
         }
     }
+    shared.first_audio.get_or_init(Instant::now);
     let rms = (mono.iter().map(|s| s * s).sum::<f32>() / mono.len().max(1) as f32).sqrt();
     shared.level.store(rms.to_bits(), Ordering::Relaxed);
     if let Ok(mut samples) = shared.samples.lock() {
@@ -231,6 +235,7 @@ impl SystemAudioCapture {
         let shared = Arc::new(Shared {
             samples: Mutex::new(Vec::new()),
             level: AtomicU32::new(0),
+            first_audio: OnceLock::new(),
             channels,
             interleaved,
         });
@@ -272,8 +277,9 @@ impl SystemAudioCapture {
         f32::from_bits(self.shared.level.load(Ordering::Relaxed))
     }
 
-    /// Stops recording and returns the mono audio at `sample_rate`.
-    pub fn stop(self) -> Vec<f32> {
+    /// Stops recording and returns the mono audio at `sample_rate`, with when
+    /// its first sample arrived.
+    pub fn stop(self) -> (Vec<f32>, Option<Instant>) {
         unsafe {
             AudioDeviceStop(self.aggregate_id, self.proc_id);
             AudioDeviceDestroyIOProcID(self.aggregate_id, self.proc_id);
@@ -281,11 +287,12 @@ impl SystemAudioCapture {
             AudioHardwareDestroyProcessTap(self.tap_id);
             drop(Arc::from_raw(self.client_data));
         }
+        let first = self.shared.first_audio.get().copied();
         let mut samples = self
             .shared
             .samples
             .lock()
             .unwrap_or_else(|p| p.into_inner());
-        std::mem::take(&mut *samples)
+        (std::mem::take(&mut *samples), first)
     }
 }
