@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "model tidak dikenal",
     "pasteFailedTitle": "Gagal Menempelkan Teks",
     "pasteFailed": "Teks tidak dapat ditempelkan ke aplikasi aktif.",
-    "transcriptionFailedTitle": "Transkripsi Gagal"
+    "transcriptionFailedTitle": "Transkripsi Gagal",
+    "microphoneSilentTitle": "Mikrofon Senyap",
+    "microphoneSilent": "Mikrofon Anda hanya mengirim keheningan. Pastikan mikrofon tidak dibisukan, atau pilih mikrofon lain di Pengaturan.",
+    "noModelSelected": "Unduh atau pilih model di Pengaturan > Model.",
+    "noModelSelectedTitle": "Tidak Ada Model Dipilih"
   },
   "appLanguage": {
     "title": "Bahasa Aplikasi",

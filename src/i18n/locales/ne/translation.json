@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "अज्ञात मोडेल",
     "pasteFailedTitle": "टेक्स्ट पेस्ट गर्न सकिएन",
     "pasteFailed": "सक्रिय एपमा टेक्स्ट पेस्ट गर्न सकिएन।",
-    "transcriptionFailedTitle": "ट्रान्सक्रिप्सन गर्न सकिएन"
+    "transcriptionFailedTitle": "ट्रान्सक्रिप्सन गर्न सकिएन",
+    "microphoneSilentTitle": "माइक्रोफोन मौन छ",
+    "microphoneSilent": "तपाईंको माइक्रोफोनले मौनता मात्र पठायो। यो म्युट छैन भनी जाँच गर्नुहोस्, वा सेटिङहरूमा अर्को माइक्रोफोन छान्नुहोस्।",
+    "noModelSelected": "सेटिङहरू > मोडेलहरूमा गएर मोडेल डाउनलोड गर्नुहोस् वा छान्नुहोस्।",
+    "noModelSelectedTitle": "कुनै मोडेल छानिएको छैन"
   },
   "appLanguage": {
     "title": "एपको भाषा",

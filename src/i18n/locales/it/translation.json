@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "modello sconosciuto",
     "pasteFailedTitle": "Impossibile incollare il testo",
     "pasteFailed": "Non è stato possibile incollare il testo nell'applicazione attiva.",
-    "transcriptionFailedTitle": "Trascrizione non riuscita"
+    "transcriptionFailedTitle": "Trascrizione non riuscita",
+    "microphoneSilentTitle": "Il microfono è muto",
+    "microphoneSilent": "Il microfono ha inviato solo silenzio. Verifica che non sia disattivato o scegli un altro microfono in Impostazioni.",
+    "noModelSelected": "Scarica o scegli un modello in Impostazioni > Modelli.",
+    "noModelSelectedTitle": "Nessun modello selezionato"
   },
   "appLanguage": {
     "title": "Lingua Applicazione",

@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "unbekanntes Modell",
     "pasteFailedTitle": "Text konnte nicht eingefügt werden",
     "pasteFailed": "Der Text konnte nicht in die aktive Anwendung eingefügt werden.",
-    "transcriptionFailedTitle": "Transkription fehlgeschlagen"
+    "transcriptionFailedTitle": "Transkription fehlgeschlagen",
+    "microphoneSilentTitle": "Mikrofon ist stumm",
+    "microphoneSilent": "Dein Mikrofon hat nur Stille geliefert. Prüfe, ob es stummgeschaltet ist, oder wähle unter Einstellungen ein anderes Mikrofon.",
+    "noModelSelected": "Lade ein Modell herunter oder wähle eines unter Einstellungen > Modelle.",
+    "noModelSelectedTitle": "Kein Modell ausgewählt"
   },
   "appLanguage": {
     "title": "Anwendungssprache",

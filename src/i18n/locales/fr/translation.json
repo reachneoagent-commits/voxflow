@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "modèle inconnu",
     "pasteFailedTitle": "Échec du collage du texte",
     "pasteFailed": "Le texte n'a pas pu être collé dans l'application active.",
-    "transcriptionFailedTitle": "Échec de la transcription"
+    "transcriptionFailedTitle": "Échec de la transcription",
+    "microphoneSilentTitle": "Le microphone est muet",
+    "microphoneSilent": "Votre microphone n'envoie que du silence. Vérifiez qu'il n'est pas coupé, ou choisissez un autre microphone dans Paramètres.",
+    "noModelSelected": "Téléchargez ou choisissez un modèle dans Paramètres > Modèles.",
+    "noModelSelectedTitle": "Aucun modèle sélectionné"
   },
   "appLanguage": {
     "title": "Langue de l'application",

@@ -76,7 +76,36 @@ fn empty_outcome(input_silent: bool) -> TranscriptionOutcome {
     }
 }
 
+/// Ends a dictation that has nothing to type. A microphone that sent only
+/// digital silence (muted, or the wrong default device) gets a toast, so it
+/// doesn't look like the model missed the speech.
+fn finish_without_text(
+    app: &AppHandle,
+    input_silent: bool,
+    sample_count: usize,
+    stop_time: Instant,
+) {
+    utils::hide_recording_overlay(app);
+    set_tray_state(app, TrayIconState::Idle);
+    if input_silent {
+        warn!("The microphone sent only digital silence; nothing was transcribed");
+        let _ = app.emit(
+            "recording-error",
+            RecordingErrorEvent {
+                error_type: "microphone_silent".to_string(),
+                detail: None,
+            },
+        );
+    }
+    emit_transcription_complete(app, empty_outcome(input_silent), sample_count, stop_time);
+}
+
 const CANCELLATION_POLL_INTERVAL: Duration = Duration::from_millis(25);
+
+/// Deadline for the whole post-processing step, retries included. The HTTP
+/// client only bounds connecting, so an endpoint that accepts the request and
+/// never answers would otherwise hold the dictation until a proxy gives up.
+const POST_PROCESS_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Bumped per recording session, so a late paste from an earlier session
 /// doesn't reset the tray or hide the overlay of a newer one.
@@ -494,7 +523,22 @@ pub(crate) async fn process_transcription_output(
     let mut post_process_prompt: Option<String> = None;
 
     if post_process {
-        if let Some(processed_text) = post_process_transcription(&settings, &final_text).await {
+        let processed = match tokio::time::timeout(
+            POST_PROCESS_TIMEOUT,
+            post_process_transcription(&settings, &final_text),
+        )
+        .await
+        {
+            Ok(result) => result,
+            Err(_) => {
+                warn!(
+                    "Post-processing timed out after {:?}; pasting the original transcription",
+                    POST_PROCESS_TIMEOUT
+                );
+                None
+            }
+        };
+        if let Some(processed_text) = processed {
             post_processed_text = Some(processed_text.clone());
             final_text = processed_text;
 
@@ -780,9 +824,7 @@ impl ShortcutAction for TranscribeAction {
                     // Tear down any streaming worker so its channel doesn't leak
                     // and block the next start_stream.
                     tm.cancel_stream();
-                    utils::hide_recording_overlay(&ah);
-                    set_tray_state(&ah, TrayIconState::Idle);
-                    emit_transcription_complete(&ah, empty_outcome(input_silent), 0, stop_time);
+                    finish_without_text(&ah, input_silent, 0, stop_time);
                 } else {
                     // Save WAV concurrently with transcription
                     let sample_count = samples.len();
@@ -920,14 +962,7 @@ impl ShortcutAction for TranscribeAction {
                             }
 
                             if processed.final_text.is_empty() {
-                                utils::hide_recording_overlay(&ah);
-                                set_tray_state(&ah, TrayIconState::Idle);
-                                emit_transcription_complete(
-                                    &ah,
-                                    empty_outcome(input_silent),
-                                    sample_count,
-                                    stop_time,
-                                );
+                                finish_without_text(&ah, input_silent, sample_count, stop_time);
                             } else {
                                 let ah_clone = ah.clone();
                                 let paste_time = Instant::now();

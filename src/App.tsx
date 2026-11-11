@@ -167,6 +167,10 @@ function App() {
         toast.error(t("errors.noInputDeviceTitle"), {
           description: t("errors.noInputDevice"),
         });
+      } else if (error_type === "microphone_silent") {
+        toast.error(t("errors.microphoneSilentTitle"), {
+          description: t("errors.microphoneSilent"),
+        });
       } else {
         toast.error(
           t("errors.recordingFailed", { error: detail ?? "Unknown error" }),
@@ -209,7 +213,14 @@ function App() {
   // Listen for model loading failures and show a toast
   useEffect(() => {
     const unlisten = listen<ModelStateEvent>("model-state-changed", (event) => {
-      if (event.payload.event_type === "loading_failed") {
+      if (
+        event.payload.event_type === "loading_failed" &&
+        !event.payload.model_id
+      ) {
+        toast.error(t("errors.noModelSelectedTitle"), {
+          description: t("errors.noModelSelected"),
+        });
+      } else if (event.payload.event_type === "loading_failed") {
         toast.error(
           t("errors.modelLoadFailed", {
             model:

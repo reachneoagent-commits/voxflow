@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "neznámý model",
     "pasteFailedTitle": "Vložení textu se nezdařilo",
     "pasteFailed": "Text nebylo možné vložit do aktivní aplikace.",
-    "transcriptionFailedTitle": "Přepis selhal"
+    "transcriptionFailedTitle": "Přepis selhal",
+    "microphoneSilentTitle": "Mikrofon je tichý",
+    "microphoneSilent": "Mikrofon posílá jen ticho. Zkontrolujte, že není ztlumený, nebo vyberte jiný mikrofon v Nastavení.",
+    "noModelSelected": "Stáhněte nebo vyberte model v Nastavení > Modely.",
+    "noModelSelectedTitle": "Není vybrán žádný model"
   },
   "appLanguage": {
     "title": "Jazyk aplikace",

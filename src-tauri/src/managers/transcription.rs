@@ -545,7 +545,13 @@ impl TranscriptionManager {
         let model_info = match self.model_manager.get_model_info(model_id) {
             Some(model_info) => model_info,
             None => {
-                let error_msg = format!("Model not found: {}", model_id);
+                // An empty id means nothing is selected yet; the frontend shows
+                // a "No Model Selected" toast for it instead of a blank error.
+                let error_msg = if model_id.is_empty() {
+                    "No model selected".to_string()
+                } else {
+                    format!("Model not found: {}", model_id)
+                };
                 let _ = self.app_handle.emit(
                     "model-state-changed",
                     ModelStateEvent {
@@ -1660,7 +1666,13 @@ fn post_process_transcription_text(
             settings.filler_word_removal_enabled,
         );
 
-        normalize_transcription_output(&without_fillers)
+        let text = normalize_transcription_output(&without_fillers);
+        // Short, wordless clips often come back as just "." or "?".
+        if text.chars().any(char::is_alphanumeric) {
+            text
+        } else {
+            String::new()
+        }
     })
 }
 

@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "bilinmeyen model",
     "pasteFailedTitle": "Metin yapıştırılamadı",
     "pasteFailed": "Metin etkin uygulamaya yapıştırılamadı.",
-    "transcriptionFailedTitle": "Transkripsiyon başarısız oldu"
+    "transcriptionFailedTitle": "Transkripsiyon başarısız oldu",
+    "microphoneSilentTitle": "Mikrofon sessiz",
+    "microphoneSilent": "Mikrofonunuz yalnızca sessizlik gönderdi. Sesinin kapalı olmadığını kontrol edin veya Ayarlar'dan başka bir mikrofon seçin.",
+    "noModelSelected": "Ayarlar > Modeller bölümünden bir model indirin veya seçin.",
+    "noModelSelectedTitle": "Model seçilmedi"
   },
   "appLanguage": {
     "title": "Uygulama Dili",

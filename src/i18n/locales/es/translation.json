@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "modelo desconocido",
     "pasteFailedTitle": "Error al pegar el texto",
     "pasteFailed": "No se pudo pegar el texto en la aplicación activa.",
-    "transcriptionFailedTitle": "Error de transcripción"
+    "transcriptionFailedTitle": "Error de transcripción",
+    "microphoneSilentTitle": "El micrófono está en silencio",
+    "microphoneSilent": "Tu micrófono solo envió silencio. Comprueba que no esté silenciado o elige otro micrófono en Configuración.",
+    "noModelSelected": "Descarga o elige un modelo en Configuración > Modelos.",
+    "noModelSelectedTitle": "Ningún modelo seleccionado"
   },
   "appLanguage": {
     "title": "Idioma de la aplicación",

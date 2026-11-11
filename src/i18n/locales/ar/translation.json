@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "نموذج غير معروف",
     "pasteFailedTitle": "فشل لصق النص",
     "pasteFailed": "تعذر لصق النص في التطبيق النشط.",
-    "transcriptionFailedTitle": "فشل التفريغ النصي"
+    "transcriptionFailedTitle": "فشل التفريغ النصي",
+    "microphoneSilentTitle": "الميكروفون صامت",
+    "microphoneSilent": "لم يرسل الميكروفون سوى الصمت. تأكد من أنه غير مكتوم، أو اختر ميكروفونًا آخر من الإعدادات.",
+    "noModelSelected": "نزّل نموذجًا أو اختره من الإعدادات > النماذج.",
+    "noModelSelectedTitle": "لم يتم اختيار نموذج"
   },
   "appLanguage": {
     "title": "لغة التطبيق",

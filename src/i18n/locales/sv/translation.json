@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "okänd modell",
     "pasteFailedTitle": "Det gick inte att klistra in texten",
     "pasteFailed": "Texten kunde inte klistras in i det aktiva programmet.",
-    "transcriptionFailedTitle": "Transkriptionen misslyckades"
+    "transcriptionFailedTitle": "Transkriptionen misslyckades",
+    "microphoneSilentTitle": "Mikrofonen är tyst",
+    "microphoneSilent": "Mikrofonen skickade bara tystnad. Kontrollera att den inte är avstängd, eller välj en annan mikrofon under Inställningar.",
+    "noModelSelected": "Ladda ned eller välj en modell under Inställningar > Modeller.",
+    "noModelSelectedTitle": "Ingen modell vald"
   },
   "appLanguage": {
     "title": "Applikationsspråk",

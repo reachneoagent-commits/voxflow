@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "מודל לא ידוע",
     "pasteFailedTitle": "ההדבקה נכשלה",
     "pasteFailed": "לא ניתן היה להדביק את הטקסט ביישום הפעיל.",
-    "transcriptionFailedTitle": "התמלול נכשל"
+    "transcriptionFailedTitle": "התמלול נכשל",
+    "microphoneSilentTitle": "המיקרופון שקט",
+    "microphoneSilent": "המיקרופון שלח רק שקט. ודאו שהוא לא מושתק, או בחרו מיקרופון אחר בהגדרות.",
+    "noModelSelected": "הורידו או בחרו מודל בהגדרות > מודלים.",
+    "noModelSelectedTitle": "לא נבחר מודל"
   },
   "appLanguage": {
     "title": "שפת האפליקציה",

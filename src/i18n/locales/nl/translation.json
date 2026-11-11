@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "onbekend model",
     "pasteFailedTitle": "Tekst plakken mislukt",
     "pasteFailed": "Tekst kon niet worden geplakt in de actieve applicatie.",
-    "transcriptionFailedTitle": "Transcriptie mislukt"
+    "transcriptionFailedTitle": "Transcriptie mislukt",
+    "microphoneSilentTitle": "Microfoon is stil",
+    "microphoneSilent": "Je microfoon stuurde alleen stilte. Controleer of hij niet gedempt is, of kies een andere microfoon via Instellingen.",
+    "noModelSelected": "Download of kies een model via Instellingen > Modellen.",
+    "noModelSelectedTitle": "Geen model geselecteerd"
   },
   "appLanguage": {
     "title": "Interfacetaal",

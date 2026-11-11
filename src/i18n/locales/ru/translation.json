@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "неизвестная модель",
     "pasteFailedTitle": "Не удалось вставить текст",
     "pasteFailed": "Не удалось вставить текст в активное приложение.",
-    "transcriptionFailedTitle": "Ошибка транскрипции"
+    "transcriptionFailedTitle": "Ошибка транскрипции",
+    "microphoneSilentTitle": "Микрофон молчит",
+    "microphoneSilent": "Микрофон передаёт только тишину. Проверьте, не отключён ли звук, или выберите другой микрофон в Настройках.",
+    "noModelSelected": "Скачайте или выберите модель в разделе Настройки > Модели.",
+    "noModelSelectedTitle": "Модель не выбрана"
   },
   "appLanguage": {
     "title": "Язык приложения",

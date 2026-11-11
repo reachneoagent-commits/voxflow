@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "未知模型",
     "pasteFailedTitle": "貼上文字失敗",
     "pasteFailed": "無法將文字貼上至目前作用中的應用程式。",
-    "transcriptionFailedTitle": "轉錄失敗"
+    "transcriptionFailedTitle": "轉錄失敗",
+    "microphoneSilentTitle": "麥克風沒有聲音",
+    "microphoneSilent": "麥克風只傳來靜音。請檢查是否已靜音，或在 設定 中選擇其他麥克風。",
+    "noModelSelected": "請在 設定 > 模型 中下載或選擇模型。",
+    "noModelSelectedTitle": "未選擇模型"
   },
   "appLanguage": {
     "title": "應用程式語言",

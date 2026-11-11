@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "unknown model",
     "pasteFailedTitle": "Failed to Paste Text",
     "pasteFailed": "Text could not be pasted into the active application.",
-    "transcriptionFailedTitle": "Transcription Failed"
+    "transcriptionFailedTitle": "Transcription Failed",
+    "microphoneSilentTitle": "Microphone Is Silent",
+    "microphoneSilent": "Your microphone sent only silence. Check that it isn't muted, or choose a different microphone in Settings.",
+    "noModelSelected": "Download or select a model in Settings > Models.",
+    "noModelSelectedTitle": "No Model Selected"
   },
   "appLanguage": {
     "title": "Application Language",

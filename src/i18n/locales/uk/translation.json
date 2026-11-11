@@ -1096,7 +1096,11 @@
     "modelLoadFailedUnknown": "невідома модель",
     "pasteFailedTitle": "Не вдалося вставити текст",
     "pasteFailed": "Не вдалося вставити текст до активної програми.",
-    "transcriptionFailedTitle": "Помилка транскрипції"
+    "transcriptionFailedTitle": "Помилка транскрипції",
+    "microphoneSilentTitle": "Мікрофон мовчить",
+    "microphoneSilent": "Мікрофон передає лише тишу. Перевірте, чи не вимкнено звук, або виберіть інший мікрофон у Налаштуваннях.",
+    "noModelSelected": "Завантажте або виберіть модель у розділі Налаштування > Моделі.",
+    "noModelSelectedTitle": "Модель не вибрано"
   },
   "appLanguage": {
     "title": "Мова інтерфейсу",
