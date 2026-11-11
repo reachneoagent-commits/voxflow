@@ -1210,7 +1210,12 @@ focus_on_my_voice?: FocusStrength;
 /**
  * Saying any of `clipboard_phrases` while dictating types what's on the clipboard.
  */
-clipboard_phrase_enabled?: boolean; clipboard_phrases?: string[]; clipboard_link_enabled?: boolean; clipboard_link_phrases?: string[]; 
+clipboard_phrase_enabled?: boolean; clipboard_phrases?: string[]; 
+/**
+ * Saying one of `clipboard_link_phrases` ("check out this link") adds the
+ * copied link right after it, when the clipboard holds a link.
+ */
+clipboard_link_enabled?: boolean; clipboard_link_phrases?: string[]; 
 /**
  * Fresh installs default from the OS locale; existing stores are migrated
  * in `apply_settings_migrations`.
