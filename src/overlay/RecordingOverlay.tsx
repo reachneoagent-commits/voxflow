@@ -45,10 +45,6 @@ const RecordingOverlay: React.FC = () => {
   // it open after the load so it doesn't collapse and reopen when text arrives.
   const [loadNoticeShown, setLoadNoticeShown] = useState(false);
   const [levels, setLevels] = useState<number[]>(Array(WAVE_BARS).fill(0));
-  // True for a moment after Voxflow recognizes words, so the waveform shows the
-  // mic is capturing speech even when the mic's raw level is too low to move it.
-  const [hearing, setHearing] = useState(false);
-  const hearingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const [streamText, setStreamText] = useState<StreamTextEvent>({
     committed: "",
     tentative: "",
@@ -139,9 +135,6 @@ const RecordingOverlay: React.FC = () => {
 
       const unlistenStream = await events.streamTextEvent.listen((event) => {
         setStreamText(event.payload);
-        setHearing(true);
-        clearTimeout(hearingTimerRef.current);
-        hearingTimerRef.current = setTimeout(() => setHearing(false), 900);
       });
 
       const unlistenPhase = await events.streamPhaseEvent.listen((event) => {
@@ -239,11 +232,7 @@ const RecordingOverlay: React.FC = () => {
 
   // ---- Shared building blocks (one visual language for every overlay form) ----
   const waveform = (
-    <div
-      className={`swave ${captureReady ? "ready" : "arming"}${
-        hearing ? " hearing" : ""
-      }`}
-    >
+    <div className={`swave ${captureReady ? "ready" : "arming"}`}>
       {levels.map((v, i) => (
         <i
           key={i}
