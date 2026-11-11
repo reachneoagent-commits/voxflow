@@ -316,6 +316,50 @@
     background-color 180ms ease,
     opacity 180ms ease;
 }
+/* Capturing: a gentle idle wave shows the mic is live, and a stronger pulse
+   plays while words are being recognized. Scales on top of the level height. */
+.swave.ready i {
+  animation: swave-idle 1.6s ease-in-out infinite;
+}
+.swave.ready i:nth-child(2n) {
+  animation-delay: 150ms;
+}
+.swave.ready i:nth-child(3n) {
+  animation-delay: 300ms;
+}
+.swave.ready.hearing i {
+  animation: swave-hear 520ms ease-in-out infinite;
+}
+.swave.ready.hearing i:nth-child(2n) {
+  animation-delay: 90ms;
+}
+.swave.ready.hearing i:nth-child(3n) {
+  animation-delay: 180ms;
+}
+@keyframes swave-idle {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.9);
+  }
+}
+@keyframes swave-hear {
+  0%,
+  100% {
+    transform: scaleY(1.6);
+  }
+  50% {
+    transform: scaleY(4.8);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swave.ready i,
+  .swave.ready.hearing i {
+    animation: none;
+  }
+}
 .swave.arming i {
   height: 6px !important;
   background: var(--s-muted);
