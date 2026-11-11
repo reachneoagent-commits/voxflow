@@ -15,6 +15,7 @@ use symphonia::core::formats::FormatOptions;
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
 use symphonia::core::probe::Hint;
+#[cfg(not(all(windows, target_arch = "aarch64")))]
 use symphonia_adapter_libopus::OpusDecoder;
 
 use crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE;
@@ -27,6 +28,7 @@ fn codecs() -> &'static CodecRegistry {
     static CODECS: LazyLock<CodecRegistry> = LazyLock::new(|| {
         let mut registry = CodecRegistry::new();
         symphonia::default::register_enabled_codecs(&mut registry);
+        #[cfg(not(all(windows, target_arch = "aarch64")))]
         registry.register_all::<OpusDecoder>();
         registry
     });
@@ -274,6 +276,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(all(windows, target_arch = "aarch64")))]
     fn opus_voice_notes_decode_to_16k_mono() {
         // A 1 s 440 Hz tone: Ogg Opus with 20 ms packets, and stereo WebM
         // with 120 ms packets, the largest Opus allows.
