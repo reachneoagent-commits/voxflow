@@ -16,8 +16,8 @@ const CURVE_POWER: f32 = 0.7;
 // window above, so the bars would stay flat while someone talks. This also
 // reads how far each band rises above its own background level. It only moves
 // the bars; the audio itself is untouched.
-const REL_DEADZONE_DB: f32 = 8.0; // ignore jitter near the room's level
-const REL_RANGE_DB: f32 = 22.0; // a rise this far above it fills the bar
+const REL_DEADZONE_DB: f32 = 10.0; // ignore jitter near the room's level
+const REL_RANGE_DB: f32 = 30.0; // a rise this far above it fills the bar
 const FLOOR_FALL_ALPHA: f32 = 0.2; // the floor follows quiet moments quickly
 
 pub struct AudioVisualiser {

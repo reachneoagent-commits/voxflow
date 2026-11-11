@@ -18,6 +18,9 @@ type OverlayState = "recording" | "streaming" | "transcribing" | "processing";
 // Number of reactive bars in the waveform (the simple, smoothed style shared by
 // every overlay form). Mic levels arrive as 16 FFT buckets; we take the first N.
 const WAVE_BARS = 9;
+const WAVE_CENTER = Math.floor(WAVE_BARS / 2);
+// How often the wave takes a new sample of the voice.
+const WAVE_STEP_MS = 70;
 
 // Only call out a model load in the Live preview once it has run this long.
 // Warm loads finish in well under this (~0.2s on Apple Silicon, ~1.5s on a
@@ -62,7 +65,10 @@ const RecordingOverlay: React.FC = () => {
   // while overflowing, so the resting first line stays crisp flush under the pill.
   const [overflowing, setOverflowing] = useState(false);
 
-  const smoothedLevelsRef = useRef<number[]>(Array(16).fill(0));
+  const envelopeRef = useRef(0);
+  const pendingPeakRef = useRef(0);
+  const lastPushRef = useRef(0);
+  const historyRef = useRef<number[]>([]);
   // Live-text scroll-back: the text region "sticks" to the newest line while the
   // user is at the bottom; if they scroll up to read history, auto-follow pauses
   // until they scroll back down.
@@ -79,7 +85,9 @@ const RecordingOverlay: React.FC = () => {
         // them would overwrite that event and leave the overlay stuck arming.
         if (overlayState === "recording" || overlayState === "streaming") {
           setCaptureReady(false);
-          smoothedLevelsRef.current = Array(16).fill(0);
+          envelopeRef.current = 0;
+          pendingPeakRef.current = 0;
+          historyRef.current = [];
           setLevels(Array(WAVE_BARS).fill(0));
           setStreamText({ committed: "", tentative: "" });
         }
@@ -123,14 +131,37 @@ const RecordingOverlay: React.FC = () => {
 
       const unlistenLevel = await listen<number[]>("mic-level", (event) => {
         const newLevels = event.payload as number[];
-        // Exponential smoothing across the 16 buckets, then take the first N
-        // bars for the shared waveform.
-        const smoothed = smoothedLevelsRef.current.map((prev, i) => {
-          const target = newLevels[i] || 0;
-          return prev * 0.7 + target * 0.3;
-        });
-        smoothedLevelsRef.current = smoothed;
-        setLevels(smoothed.slice(0, WAVE_BARS));
+        // One loudness for the whole voice: the average over all bands, gated
+        // so room noise reads as silence. It rises fast and falls slowly.
+        const avg =
+          newLevels.reduce((sum, v) => sum + (v || 0), 0) /
+          Math.max(1, newLevels.length);
+        const gated = avg < 0.1 ? 0 : (avg - 0.1) / 0.9;
+        const prev = envelopeRef.current;
+        envelopeRef.current =
+          gated > prev ? prev * 0.4 + gated * 0.6 : prev * 0.85 + gated * 0.15;
+        pendingPeakRef.current = Math.max(
+          pendingPeakRef.current,
+          envelopeRef.current,
+        );
+
+        // The bars show the last moments of the voice as a wave: the newest
+        // sample in the middle, older ones spreading outward. Pausing flattens
+        // the wave to dots; talking sends ripples out.
+        const now = performance.now();
+        if (now - lastPushRef.current < WAVE_STEP_MS) return;
+        lastPushRef.current = now;
+        const history = [pendingPeakRef.current, ...historyRef.current].slice(
+          0,
+          WAVE_CENTER + 1,
+        );
+        pendingPeakRef.current = 0;
+        historyRef.current = history;
+        setLevels(
+          Array.from({ length: WAVE_BARS }, (_, i) => {
+            return history[Math.abs(i - WAVE_CENTER)] ?? 0;
+          }),
+        );
       });
 
       const unlistenStream = await events.streamTextEvent.listen((event) => {
