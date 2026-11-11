@@ -85,7 +85,13 @@
       "hintBoth": "اسمح بالإذنين للمتابعة",
       "hintMicrophone": "اسمح بالوصول إلى الميكروفون للمتابعة",
       "welcomeBack": "أهلًا بعودتك. سنكمل من حيث توقفت.",
-      "relaunch": "الاختصار لا يستجيب بعد هذا؟ <relaunch>أعد تشغيل Voxflow</relaunch> وستعود إلى هنا مباشرة."
+      "relaunch": "الاختصار لا يستجيب بعد هذا؟ <relaunch>أعد تشغيل Voxflow</relaunch> وستعود إلى هنا مباشرة.",
+      "stuck": {
+        "title": "Can't allow Accessibility?",
+        "body": "Quit Voxflow, paste this into Terminal and press Return. Then reopen Voxflow and click Allow again.",
+        "copy": "Copy",
+        "copied": "Copied"
+      }
     },
     "shell": {
       "back": "رجوع",

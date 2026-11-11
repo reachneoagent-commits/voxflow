@@ -85,7 +85,13 @@
       "hintBoth": "Permita as duas para continuar",
       "hintMicrophone": "Permita o microfone para continuar",
       "welcomeBack": "Bem-vindo de volta. Retomando de onde você parou.",
-      "relaunch": "O atalho não responde depois disso? <relaunch>Reinicie o Voxflow</relaunch> e você volta direto para cá."
+      "relaunch": "O atalho não responde depois disso? <relaunch>Reinicie o Voxflow</relaunch> e você volta direto para cá.",
+      "stuck": {
+        "title": "Can't allow Accessibility?",
+        "body": "Quit Voxflow, paste this into Terminal and press Return. Then reopen Voxflow and click Allow again.",
+        "copy": "Copy",
+        "copied": "Copied"
+      }
     },
     "shell": {
       "back": "Voltar",

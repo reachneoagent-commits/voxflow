@@ -85,7 +85,13 @@
       "hintBoth": "Erlaube beides, um fortzufahren",
       "hintMicrophone": "Erlaube das Mikrofon, um fortzufahren",
       "welcomeBack": "Willkommen zurück. Es geht dort weiter, wo du aufgehört hast.",
-      "relaunch": "Tastenkürzel reagiert danach nicht? <relaunch>Voxflow neu starten</relaunch> und du landest direkt wieder hier."
+      "relaunch": "Tastenkürzel reagiert danach nicht? <relaunch>Voxflow neu starten</relaunch> und du landest direkt wieder hier.",
+      "stuck": {
+        "title": "Can't allow Accessibility?",
+        "body": "Quit Voxflow, paste this into Terminal and press Return. Then reopen Voxflow and click Allow again.",
+        "copy": "Copy",
+        "copied": "Copied"
+      }
     },
     "shell": {
       "back": "Zurück",

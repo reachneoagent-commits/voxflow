@@ -85,7 +85,13 @@
       "hintBoth": "請允許兩項權限以繼續",
       "hintMicrophone": "請允許麥克風以繼續",
       "welcomeBack": "歡迎回來，我們從上次中斷的地方繼續。",
-      "relaunch": "之後快捷鍵沒有反應嗎？<relaunch>重新啟動 Voxflow</relaunch>，就會直接回到這裡。"
+      "relaunch": "之後快捷鍵沒有反應嗎？<relaunch>重新啟動 Voxflow</relaunch>，就會直接回到這裡。",
+      "stuck": {
+        "title": "Can't allow Accessibility?",
+        "body": "Quit Voxflow, paste this into Terminal and press Return. Then reopen Voxflow and click Allow again.",
+        "copy": "Copy",
+        "copied": "Copied"
+      }
     },
     "shell": {
       "back": "返回",

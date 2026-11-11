@@ -79,6 +79,47 @@ const PermissionRow: React.FC<PermissionRowProps> = ({
   );
 };
 
+/** Clears a stale Accessibility grant (left by an older build) so macOS asks afresh. */
+const RESET_ACCESSIBILITY_COMMAND =
+  "tccutil reset Accessibility com.voxflow.app";
+
+/** macOS only: what to do when Accessibility can't be allowed after an update. */
+const AccessibilityStuckHelp: React.FC = () => {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(RESET_ACCESSIBILITY_COMMAND);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // The command is on screen to select by hand.
+    }
+  };
+
+  return (
+    <div className="mt-[18px] w-full rounded-panel border border-line px-[18px] py-[14px] text-start">
+      <b className="block text-small font-semibold">
+        {t("onboarding.permissions.stuck.title")}
+      </b>
+      <p className="mt-[2px] mb-[10px] text-small leading-[1.45] text-ink-2 text-pretty">
+        {t("onboarding.permissions.stuck.body")}
+      </p>
+      <div className="flex items-center gap-[10px]">
+        <code className="min-w-0 flex-1 select-text overflow-x-auto whitespace-nowrap rounded-[8px] bg-wash px-[12px] py-[8px] font-mono text-small">
+          {RESET_ACCESSIBILITY_COMMAND}
+        </code>
+        <Button variant="secondary" size="md" onClick={copy}>
+          {copied
+            ? t("onboarding.permissions.stuck.copied")
+            : t("onboarding.permissions.stuck.copy")}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 interface PermissionsProps {
   permissions: PermissionsState;
   /** In the flow: its place and Back. Standalone (a returning user): neither. */
@@ -210,6 +251,9 @@ export const Permissions: React.FC<PermissionsProps> = ({
             components={{ relaunch: <TextLink onClick={relaunchVoxflow} /> }}
           />
         </p>
+        {isMac &&
+          permissions.microphone === "granted" &&
+          permissions.accessibility !== "granted" && <AccessibilityStuckHelp />}
       </ScreenMain>
     </OnboardingShell>
   );

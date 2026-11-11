@@ -85,7 +85,13 @@
       "hintBoth": "계속하려면 둘 다 허용하세요",
       "hintMicrophone": "계속하려면 마이크를 허용하세요",
       "welcomeBack": "다시 오셨네요. 하던 곳에서 이어갑니다.",
-      "relaunch": "이후에도 단축키가 반응하지 않나요? <relaunch>Voxflow를 다시 실행</relaunch>하면 바로 이 화면으로 돌아옵니다."
+      "relaunch": "이후에도 단축키가 반응하지 않나요? <relaunch>Voxflow를 다시 실행</relaunch>하면 바로 이 화면으로 돌아옵니다.",
+      "stuck": {
+        "title": "Can't allow Accessibility?",
+        "body": "Quit Voxflow, paste this into Terminal and press Return. Then reopen Voxflow and click Allow again.",
+        "copy": "Copy",
+        "copied": "Copied"
+      }
     },
     "shell": {
       "back": "뒤로",

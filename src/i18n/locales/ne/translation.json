@@ -85,7 +85,13 @@
       "hintBoth": "जारी राख्न दुवैलाई अनुमति दिनुहोस्",
       "hintMicrophone": "जारी राख्न माइक्रोफोनलाई अनुमति दिनुहोस्",
       "welcomeBack": "फेरि स्वागत छ। जहाँ छोड्नुभएको थियो, त्यहीँबाट सुरु गरौँ।",
-      "relaunch": "यसपछि सर्टकटले काम गरेन? <relaunch>Voxflow फेरि सुरु गर्नुहोस्</relaunch> र तपाईं ठ्याक्कै यहीँ फर्कनुहुनेछ।"
+      "relaunch": "यसपछि सर्टकटले काम गरेन? <relaunch>Voxflow फेरि सुरु गर्नुहोस्</relaunch> र तपाईं ठ्याक्कै यहीँ फर्कनुहुनेछ।",
+      "stuck": {
+        "title": "Can't allow Accessibility?",
+        "body": "Quit Voxflow, paste this into Terminal and press Return. Then reopen Voxflow and click Allow again.",
+        "copy": "Copy",
+        "copied": "Copied"
+      }
     },
     "shell": {
       "back": "पछाडि",
