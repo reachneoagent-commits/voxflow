@@ -12,6 +12,14 @@ const DB_MAX: f32 = -30.0;
 const GAIN: f32 = 1.3;
 const CURVE_POWER: f32 = 0.7;
 
+// Voice relative to the room: a quiet microphone never reaches the absolute
+// window above, so the bars would stay flat while someone talks. This also
+// reads how far each band rises above its own background level. It only moves
+// the bars; the audio itself is untouched.
+const REL_DEADZONE_DB: f32 = 8.0; // ignore jitter near the room's level
+const REL_RANGE_DB: f32 = 22.0; // a rise this far above it fills the bar
+const FLOOR_FALL_ALPHA: f32 = 0.2; // the floor follows quiet moments quickly
+
 pub struct AudioVisualiser {
     fft: Arc<dyn Fft<f32>>,
     window: Vec<f32>,
@@ -21,6 +29,8 @@ pub struct AudioVisualiser {
     buffer: Vec<f32>,
     window_size: usize,
     buckets: usize,
+    /// The first window sets the floor, so it starts at the room's real level.
+    floor_seeded: bool,
 }
 
 impl AudioVisualiser {
@@ -80,6 +90,7 @@ impl AudioVisualiser {
             buffer: Vec::with_capacity(window_size * 2),
             window_size,
             buckets,
+            floor_seeded: false,
         }
     }
 
@@ -131,8 +142,14 @@ impl AudioVisualiser {
                 -80.0 // Very low floor for zero power
             };
 
-            // Only update noise floor when signal is quiet (below current floor + 10dB)
-            if db < self.noise_floor[bucket_idx] + 10.0 {
+            // Track the room's level: down quickly, up only very slowly, so
+            // steady speech doesn't raise it.
+            if !self.floor_seeded {
+                self.noise_floor[bucket_idx] = db;
+            } else if db < self.noise_floor[bucket_idx] {
+                self.noise_floor[bucket_idx] +=
+                    FLOOR_FALL_ALPHA * (db - self.noise_floor[bucket_idx]);
+            } else if db < self.noise_floor[bucket_idx] + 10.0 {
                 const NOISE_ALPHA: f32 = 0.001; // Very slow adaptation
                 self.noise_floor[bucket_idx] =
                     NOISE_ALPHA * db + (1.0 - NOISE_ALPHA) * self.noise_floor[bucket_idx];
@@ -140,8 +157,13 @@ impl AudioVisualiser {
 
             // Map configurable dB range to 0-1 with gain and curve shaping
             let normalized = ((db - DB_MIN) / (DB_MAX - DB_MIN)).clamp(0.0, 1.0);
-            buckets[bucket_idx] = (normalized * GAIN).powf(CURVE_POWER).clamp(0.0, 1.0);
+            let absolute = (normalized * GAIN).powf(CURVE_POWER).clamp(0.0, 1.0);
+            let rise = db - self.noise_floor[bucket_idx] - REL_DEADZONE_DB;
+            let relative = (rise / REL_RANGE_DB).clamp(0.0, 1.0).powf(CURVE_POWER);
+            buckets[bucket_idx] = absolute.max(relative);
         }
+
+        self.floor_seeded = true;
 
         // Apply light smoothing to reduce jitter
         for i in 1..buckets.len() - 1 {
@@ -156,7 +178,67 @@ impl AudioVisualiser {
 
     pub fn reset(&mut self) {
         self.buffer.clear();
-        // Reset noise floor to initial values
+        // Re-learn the room's level at the next window
         self.noise_floor.fill(-40.0);
+        self.floor_seeded = false;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const RATE: u32 = 16_000;
+    const WINDOW: usize = 512;
+
+    fn tone(amplitude: f32, offset: usize) -> Vec<f32> {
+        (0..WINDOW)
+            .map(|i| {
+                let t = (i + offset) as f32 / RATE as f32;
+                amplitude * (2.0 * std::f32::consts::PI * 1000.0 * t).sin()
+            })
+            .collect()
+    }
+
+    fn visualiser() -> AudioVisualiser {
+        AudioVisualiser::new(RATE, WINDOW, 16, 400.0, 4000.0)
+    }
+
+    fn peak(levels: &[f32]) -> f32 {
+        levels.iter().cloned().fold(0.0, f32::max)
+    }
+
+    #[test]
+    fn a_quiet_microphone_still_moves_the_bars_when_the_voice_rises() {
+        let mut v = visualiser();
+        // Very quiet room, then a voice that is still far below the absolute window.
+        for _ in 0..10 {
+            v.feed(&tone(0.00002, 0)).unwrap();
+        }
+        let voice = peak(&v.feed(&tone(0.003, 0)).unwrap());
+        assert!(voice > 0.5, "voice should fill the bars, got {voice}");
+    }
+
+    #[test]
+    fn bars_settle_when_the_voice_stops() {
+        let mut v = visualiser();
+        for _ in 0..10 {
+            v.feed(&tone(0.00002, 0)).unwrap();
+        }
+        for _ in 0..5 {
+            v.feed(&tone(0.003, 0)).unwrap();
+        }
+        let after = peak(&v.feed(&tone(0.00002, 0)).unwrap());
+        assert!(after < 0.15, "bars should drop back, got {after}");
+    }
+
+    #[test]
+    fn steady_room_noise_leaves_the_bars_still() {
+        let mut v = visualiser();
+        let mut last = 1.0;
+        for _ in 0..40 {
+            last = peak(&v.feed(&tone(0.0002, 0)).unwrap());
+        }
+        assert!(last < 0.05, "steady noise should read as still, got {last}");
     }
 }
