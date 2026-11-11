@@ -191,6 +191,15 @@ pub fn initialize_shortcuts(app: AppHandle) -> Result<(), String> {
     app.manage(ShortcutsInitialized);
     crate::secure_input::reconcile_fallback(&app);
 
+    // Permissions are settled by now: open the microphone in the background so
+    // the first dictation starts at once instead of waiting for the device.
+    if let Some(manager) =
+        app.try_state::<std::sync::Arc<crate::managers::audio::AudioRecordingManager>>()
+    {
+        let manager = manager.inner().clone();
+        std::thread::spawn(move || manager.warm_up());
+    }
+
     log::info!("Shortcuts initialized successfully");
     Ok(())
 }

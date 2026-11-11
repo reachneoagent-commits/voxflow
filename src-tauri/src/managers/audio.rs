@@ -662,6 +662,23 @@ impl AudioRecordingManager {
         );
     }
 
+    /// Opens the microphone ahead of the first recording, so the first shortcut
+    /// press after launch doesn't wait for the device to open. In on-demand
+    /// mode it closes again after the usual idle window. Best effort.
+    pub fn warm_up(&self) {
+        let state = self.state.lock().unwrap();
+        if !matches!(*state, RecordingState::Idle) || *self.is_open.lock().unwrap() {
+            return;
+        }
+        if let Err(e) = self.start_microphone_stream() {
+            warn!("Could not warm up the microphone: {e}");
+            return;
+        }
+        if matches!(*self.mode.lock().unwrap(), MicrophoneMode::OnDemand) {
+            self.schedule_lazy_close();
+        }
+    }
+
     fn schedule_lazy_close(&self) {
         let gen = self.close_generation.fetch_add(1, Ordering::SeqCst) + 1;
         let app = self.app_handle.clone();
