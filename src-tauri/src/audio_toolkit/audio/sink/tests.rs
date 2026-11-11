@@ -176,3 +176,36 @@ fn finish_returns_the_detector_for_the_next_recording() {
     assert_eq!(captured.vad.frame_samples(), FRAME);
     assert_eq!(captured.vad.hangover_for(VadPolicy::Streaming), 20);
 }
+
+#[test]
+fn a_pause_after_speech_flushes_the_live_stream_once_without_recording_it() {
+    let mut h = harness(VadPolicy::Offline);
+    h.sink.process_chunk(chunk(&[1.0, 0.0, 0.0, 0.0], FRAME));
+    // 1,600 noise frames of 4 samples: well past the flush threshold, twice over.
+    for _ in 0..3_200 {
+        h.sink.process_chunk(chunk(&[0.0; FRAME], FRAME));
+    }
+
+    let fed = h.fed.lock().unwrap().clone();
+    assert_eq!(
+        fed.len(),
+        FRAME + 24_000,
+        "one speech frame, then one flush"
+    );
+    assert_eq!(&fed[..FRAME], &[1.0, 0.0, 0.0, 0.0]);
+    assert!(fed[FRAME..].iter().all(|&x| x == 0.0));
+    assert_eq!(
+        h.sink.finish().samples,
+        vec![1.0, 0.0, 0.0, 0.0],
+        "the recording keeps only the speech"
+    );
+}
+
+#[test]
+fn no_flush_without_speech_before_the_pause() {
+    let mut h = harness(VadPolicy::Offline);
+    for _ in 0..3_200 {
+        h.sink.process_chunk(chunk(&[0.0; FRAME], FRAME));
+    }
+    assert!(h.fed.lock().unwrap().is_empty());
+}

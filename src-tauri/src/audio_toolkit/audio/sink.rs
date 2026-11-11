@@ -93,11 +93,22 @@ pub struct CaptureSink {
     samples: Vec<f32>,
     heard_sound: bool,
     focus: Option<FocusGate>,
+    /// Speech was fed to live streaming since the last tail flush.
+    speech_pending_flush: bool,
+    /// Samples the VAD has dropped as noise since that speech.
+    noise_since_speech: usize,
 }
 
 /// Spectrum window at 16 kHz: 32 ms, near the overlay's ~30 Hz refresh.
 const VISUALIZER_WINDOW: usize = 512;
 const VISUALIZER_BUCKETS: usize = 16;
+
+/// A live-streaming model holds back the last second or two of audio until
+/// more arrives, and the VAD drops the silence after a pause, so the final words
+/// would only show once the person spoke again. After this much dropped
+/// silence, the stream gets a short stretch of zeros to push those words out.
+const FLUSH_AFTER_NOISE_SAMPLES: usize = 6_000; // 375 ms at 16 kHz
+const FLUSH_SILENCE_SAMPLES: usize = 24_000; // 1.5 s at 16 kHz
 
 impl CaptureSink {
     /// A sink for one recording. Resets the detector and applies the policy's
@@ -130,6 +141,8 @@ impl CaptureSink {
             samples: Vec::new(),
             heard_sound: false,
             focus: None,
+            speech_pending_flush: false,
+            noise_since_speech: 0,
         }
     }
 
@@ -209,9 +222,20 @@ impl Sink for CaptureSink {
             VadFrame::Speech(frame) => {
                 if self.focus.as_mut().is_none_or(|gate| gate.keep(frame)) {
                     Self::emit(&mut self.samples, &self.on_audio, frame);
+                    self.speech_pending_flush = true;
+                    self.noise_since_speech = 0;
                 }
             }
-            VadFrame::Noise => {}
+            VadFrame::Noise => {
+                if self.speech_pending_flush {
+                    self.noise_since_speech += chunk.samples.len();
+                    if self.noise_since_speech >= FLUSH_AFTER_NOISE_SAMPLES {
+                        // Only the live stream hears this; it is not recorded.
+                        (self.on_audio)(&[0.0; FLUSH_SILENCE_SAMPLES]);
+                        self.speech_pending_flush = false;
+                    }
+                }
+            }
         }
     }
 }
