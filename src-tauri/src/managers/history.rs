@@ -8,6 +8,7 @@ use specta::Type;
 use std::fs;
 use std::path::PathBuf;
 use tauri::AppHandle;
+use tauri::Manager;
 use tauri_specta::Event;
 
 use crate::language_detection::{LanguageDecision, LanguageSource};
@@ -131,6 +132,16 @@ impl HistoryManager {
         if !recordings_dir.exists() {
             fs::create_dir_all(&recordings_dir)?;
             debug!("Created recordings directory: {:?}", recordings_dir);
+        }
+
+        // The webview may load audio from the recordings folder through the asset protocol, and
+        // from nowhere else. Allowed here rather than in tauri.conf.json because portable mode
+        // keeps the folder somewhere else.
+        if let Err(e) = app_handle
+            .asset_protocol_scope()
+            .allow_directory(&recordings_dir, true)
+        {
+            warn!("Could not allow the recordings folder in the asset protocol: {e}");
         }
 
         let manager = Self {

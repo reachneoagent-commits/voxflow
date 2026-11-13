@@ -8,6 +8,8 @@ use std::fmt;
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 
+use crate::secret_store::secrets;
+
 pub const APPLE_INTELLIGENCE_PROVIDER_ID: &str = "apple_intelligence";
 pub const APPLE_INTELLIGENCE_DEFAULT_MODEL_ID: &str = "Apple Intelligence";
 
@@ -1267,6 +1269,17 @@ pub fn get_settings(app: &AppHandle) -> AppSettings {
             updated = true;
         }
 
+        // API keys live in the system's credential store, not the file. Fill them in, and move
+        // any an older version left in the file (the write below blanks them there).
+        let keys_in_file = settings
+            .post_process_api_keys
+            .values()
+            .any(|key| !key.is_empty());
+        hydrate_secrets(&mut settings);
+        if keys_in_file && keys_will_move(&settings.post_process_api_keys) {
+            updated = true;
+        }
+
         // Merge in any bindings added since this store was written.
         for (key, value) in get_default_settings().bindings {
             if let std::collections::hash_map::Entry::Vacant(entry) = settings.bindings.entry(key) {
@@ -1277,18 +1290,18 @@ pub fn get_settings(app: &AppHandle) -> AppSettings {
         }
 
         if updated {
-            store.set("settings", serde_json::to_value(&settings).unwrap());
+            store.set("settings", sealed_value(&settings));
         }
 
         settings
     } else {
         let default_settings = get_default_settings();
-        store.set("settings", serde_json::to_value(&default_settings).unwrap());
+        store.set("settings", sealed_value(&default_settings));
         default_settings
     };
 
     if ensure_post_process_defaults(&mut settings) {
-        store.set("settings", serde_json::to_value(&settings).unwrap());
+        store.set("settings", sealed_value(&settings));
     }
 
     settings
@@ -1526,12 +1539,39 @@ pub fn update_checks_effectively_enabled(settings: &AppSettings) -> bool {
     settings.update_checks_enabled && !update_checks_forced_disabled()
 }
 
+/// What goes into the settings file: `settings`, with each API key the system's credential
+/// store now holds blanked. A key it could not take stays, so none is ever lost.
+fn sealed_value(settings: &AppSettings) -> serde_json::Value {
+    let mut sealed = settings.clone();
+    sealed.post_process_api_keys.0 = secrets().seal(&settings.post_process_api_keys);
+    serde_json::to_value(&sealed).unwrap()
+}
+
+/// Fill in the API keys the file leaves blank from the system's credential store.
+fn hydrate_secrets(settings: &mut AppSettings) {
+    let providers: Vec<String> = settings
+        .post_process_providers
+        .iter()
+        .map(|provider| provider.id.clone())
+        .collect();
+    secrets().hydrate(
+        &mut settings.post_process_api_keys,
+        providers.iter().map(String::as_str),
+    );
+}
+
+/// Whether the system's credential store takes any key in `keys` (so the file should be
+/// rewritten without it).
+fn keys_will_move(keys: &SecretMap) -> bool {
+    secrets().seal(keys) != keys.0
+}
+
 pub fn write_settings(app: &AppHandle, settings: AppSettings) {
     let store = app
         .store(crate::portable::store_path(SETTINGS_STORE_PATH))
         .expect("Failed to initialize store");
 
-    store.set("settings", serde_json::to_value(&settings).unwrap());
+    store.set("settings", sealed_value(&settings));
 }
 
 pub fn get_bindings(app: &AppHandle) -> HashMap<String, ShortcutBinding> {
