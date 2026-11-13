@@ -600,6 +600,7 @@ pub async fn fetch_models(
 
     let response = client
         .get(&url)
+        .timeout(std::time::Duration::from_secs(15))
         .send()
         .await
         .map_err(|e| report_reqwest_error("Failed to fetch models", &e))?;
