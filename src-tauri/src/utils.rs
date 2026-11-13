@@ -185,9 +185,89 @@ pub fn env_flag_enabled(name: &str) -> bool {
     }
 }
 
+#[cfg(target_os = "linux")]
+static GAMESCOPE_WSI_DISABLED_BY_APP: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Only set `DISABLE_GAMESCOPE_WSI` when the user hasn't set it (even to empty).
+#[cfg(target_os = "linux")]
+fn should_disable_gamescope_wsi(existing: Option<&std::ffi::OsStr>) -> bool {
+    existing.is_none()
+}
+
+/// Disable the Gamescope WSI layer, which aborts during Vulkan device creation
+/// on SteamOS (Handy #2264, #2454). Vulkan is only used for compute, so the
+/// layer isn't needed.
+#[cfg(target_os = "linux")]
+pub fn disable_gamescope_wsi_layer() {
+    let existing = std::env::var_os("DISABLE_GAMESCOPE_WSI");
+    if should_disable_gamescope_wsi(existing.as_deref()) {
+        std::env::set_var("DISABLE_GAMESCOPE_WSI", "1");
+        GAMESCOPE_WSI_DISABLED_BY_APP.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+}
+
+/// True when [`disable_gamescope_wsi_layer`] set the variable itself.
+#[cfg(target_os = "linux")]
+pub fn gamescope_wsi_disabled_by_app() -> bool {
+    GAMESCOPE_WSI_DISABLED_BY_APP.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// The `GDK_BACKEND` value requested through `VOXFLOW_GDK_BACKEND`, if any.
+/// Empty or whitespace-only values count as unset.
+#[cfg(target_os = "linux")]
+fn requested_gdk_backend(value: Option<&str>) -> Option<&str> {
+    value.map(str::trim).filter(|v| !v.is_empty())
+}
+
+/// Copy `VOXFLOW_GDK_BACKEND` into `GDK_BACKEND` when it is set.
+///
+/// The AppImage's `apprun-hooks/linuxdeploy-plugin-gtk.sh` unconditionally
+/// runs `export GDK_BACKEND=x11` (a workaround for tauri-apps/tauri#8541) after
+/// the user's environment, so `GDK_BACKEND=wayland ./Voxflow.AppImage` never
+/// reaches the app. The hook cannot overwrite a variable it does not know
+/// about, so `VOXFLOW_GDK_BACKEND=wayland ./Voxflow.AppImage` is the opt-in to
+/// native Wayland (Handy #1729, #2034, #2453). Must run before GTK initializes.
+#[cfg(target_os = "linux")]
+pub fn apply_voxflow_gdk_backend() {
+    let requested = std::env::var("VOXFLOW_GDK_BACKEND").ok();
+    if let Some(backend) = requested_gdk_backend(requested.as_deref()) {
+        std::env::set_var("GDK_BACKEND", backend);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn gamescope_wsi_is_disabled_only_when_the_user_set_nothing() {
+        use std::ffi::OsStr;
+        assert!(should_disable_gamescope_wsi(None));
+        assert!(!should_disable_gamescope_wsi(Some(OsStr::new("1"))));
+        assert!(!should_disable_gamescope_wsi(Some(OsStr::new("0"))));
+        assert!(!should_disable_gamescope_wsi(Some(OsStr::new(""))));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn requested_gdk_backend_ignores_unset_and_blank() {
+        assert_eq!(requested_gdk_backend(None), None);
+        assert_eq!(requested_gdk_backend(Some("")), None);
+        assert_eq!(requested_gdk_backend(Some("  ")), None);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn requested_gdk_backend_keeps_the_value() {
+        assert_eq!(requested_gdk_backend(Some("wayland")), Some("wayland"));
+        assert_eq!(requested_gdk_backend(Some(" x11 ")), Some("x11"));
+        assert_eq!(
+            requested_gdk_backend(Some("wayland,x11")),
+            Some("wayland,x11")
+        );
+    }
 
     #[test]
     fn arm64_native_machine_is_the_only_match() {

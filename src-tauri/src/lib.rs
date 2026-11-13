@@ -37,6 +37,8 @@ pub use cli::CliArgs;
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use tauri_specta::{collect_commands, collect_events, Builder};
 pub use utils::env_flag_enabled;
+#[cfg(target_os = "linux")]
+pub use utils::{apply_voxflow_gdk_backend, disable_gamescope_wsi_layer};
 
 use env_filter::Builder as EnvFilterBuilder;
 use managers::audio::AudioRecordingManager;
@@ -931,6 +933,19 @@ pub fn run(cli_args: CliArgs) {
                 "Vulkan layer policy: VK_LOADER_LAYERS_DISABLE={:?}, VOXFLOW_KEEP_VULKAN_IMPLICIT_LAYERS={}",
                 std::env::var_os("VK_LOADER_LAYERS_DISABLE"),
                 utils::env_flag_enabled("VOXFLOW_KEEP_VULKAN_IMPLICIT_LAYERS"),
+            );
+            #[cfg(target_os = "linux")]
+            log::info!(
+                "GTK backend: GDK_BACKEND={:?}, VOXFLOW_GDK_BACKEND={:?} (applied: {})",
+                std::env::var_os("GDK_BACKEND"),
+                std::env::var_os("VOXFLOW_GDK_BACKEND"),
+                std::env::var("VOXFLOW_GDK_BACKEND").is_ok_and(|v| !v.trim().is_empty()),
+            );
+            #[cfg(target_os = "linux")]
+            log::info!(
+                "Gamescope WSI layer policy: DISABLE_GAMESCOPE_WSI={:?} (set by Voxflow: {})",
+                std::env::var_os("DISABLE_GAMESCOPE_WSI"),
+                utils::gamescope_wsi_disabled_by_app(),
             );
             system_languages::log_system_languages();
 
