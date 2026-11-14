@@ -5,6 +5,13 @@ use clap::Parser;
 use voxflow_app_lib::CliArgs;
 
 fn main() {
+    // Let users pick GTK's display backend even inside the AppImage, whose
+    // launch hook forces GDK_BACKEND=x11 over the user's own value (Handy
+    // #1729, #2034; hook workaround for tauri-apps/tauri#8541). Runs first so
+    // GTK never sees the forced value.
+    #[cfg(target_os = "linux")]
+    voxflow_app_lib::apply_voxflow_gdk_backend();
+
     #[cfg(target_os = "linux")]
     {
         // DMABUF renderer causes crashes on various GPU/display server configurations
@@ -25,6 +32,9 @@ fn main() {
             std::env::set_var("VK_LOADER_LAYERS_DISABLE", "~implicit~");
         }
     }
+
+    #[cfg(target_os = "linux")]
+    voxflow_app_lib::disable_gamescope_wsi_layer();
 
     // Transcription worker: runs transcribe.cpp in isolation and never touches
     // Tauri, the CLI, or single-instance handling. Checked after the env setup
