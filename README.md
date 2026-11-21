@@ -1,6 +1,11 @@
-# Voxflow
+<p align="left">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/header-dark.png">
+    <img src="brand/header-light.png" width="600" height="160" alt="Voxflow logo and name">
+  </picture>
+</p>
 
-**A free, open source, and extensible speech-to-text application that works completely offline.**
+<p align="center"><b>A free, open source, and extensible speech-to-text application that works completely offline.</b></p>
 
 Voxflow is a cross-platform desktop application that provides simple, privacy-focused speech transcription. Press a shortcut, speak, and have your words appear in any text field. This happens on your own computer without sending any information to the cloud.
 
@@ -39,6 +44,12 @@ The process is entirely local:
 - **Paste by voice**: copy a link, then say "check out this link" and Voxflow adds it after the words; say "paste link" or "paste clipboard" to type any text you copied
 - **Ignore background voices**: an option that skips speech much quieter than yours, such as a nearby conversation
 - **Accuracy and speed labels** in the model picker
+
+## Supported platforms
+
+- **Windows:** x64 and ARM64
+- **macOS:** Apple silicon and Intel (separate DMG for each)
+- **Linux:** x64 and ARM64 (AppImage, deb and rpm)
 
 ## Download and install
 
@@ -120,7 +131,7 @@ Model setup, Linux notes, command-line options and known issues are in **[docs/T
 
 MIT License. See [LICENSE](LICENSE) for details. Voxflow includes code originally written by CJ Pais (copyright 2025), used under the same license.
 
-## Acknowledgments
+## Credits
 
 - **[Handy](https://github.com/cjpais/Handy)** by CJ Pais, the open source project Voxflow was forked from
 - **Whisper** by OpenAI for the speech recognition model
