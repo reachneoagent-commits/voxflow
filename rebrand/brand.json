@@ -1,0 +1,112 @@
+{
+  "name": "Voxflow",
+  "repo": "reachneoagent-commits/voxflow",
+  "upstream_name": "Handy",
+  "_comment": "Voxflow carries its own features on top of Handy, so most of its changes are ordinary code, merged by hand. These edits are the identity that must never revert to Handy's in a merge; apply.py --check catches it if one does. See docs/UPSTREAM.md.",
+  "edits": [
+    {
+      "file": "package.json",
+      "find": "\"name\": \"handy-app\"",
+      "replace": "\"name\": \"voxflow-app\""
+    },
+    {
+      "file": "src-tauri/Cargo.toml",
+      "find": "name = \"handy\"\n",
+      "replace": "name = \"voxflow\"\n"
+    },
+    {
+      "file": "src-tauri/Cargo.toml",
+      "find": "description = \"Handy\"",
+      "replace": "description = \"Free, open source speech-to-text that works completely offline\""
+    },
+    {
+      "file": "src-tauri/Cargo.toml",
+      "find": "authors = [\"cjpais\"]",
+      "replace": "authors = [\"Voxflow contributors\"]"
+    },
+    {
+      "file": "src-tauri/Cargo.toml",
+      "find": "default-run = \"handy\"",
+      "replace": "default-run = \"voxflow\""
+    },
+    {
+      "file": "src-tauri/Cargo.toml",
+      "find": "name = \"handy_app_lib\"",
+      "replace": "name = \"voxflow_app_lib\"",
+      "why": "every use in src/ is voxflow_app_lib; a merge that brings back handy_app_lib fails to build"
+    },
+    {
+      "file": "src-tauri/tauri.conf.json",
+      "find": "\"productName\": \"Handy\"",
+      "replace": "\"productName\": \"Voxflow\""
+    },
+    {
+      "file": "src-tauri/tauri.conf.json",
+      "find": "\"identifier\": \"com.pais.handy\"",
+      "replace": "\"identifier\": \"com.voxflow.app\"",
+      "why": "changing it would lose every user's settings, models and history"
+    },
+    {
+      "file": "src-tauri/tauri.conf.json",
+      "find": "\"/usr/lib/Handy\"",
+      "replace": "\"/usr/lib/Voxflow\""
+    },
+    {
+      "file": "src-tauri/tauri.conf.json",
+      "find": "https://github.com/cjpais/Handy/releases/latest/download/latest.json",
+      "replace": "https://github.com/reachneoagent-commits/voxflow/releases/latest/download/latest.json",
+      "why": "updates come from our releases"
+    },
+    {
+      "file": "src-tauri/tauri.conf.json",
+      "find": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJBQjcyMDk1MjA2NjAxRjkKUldUNUFXWWdsU0MzdXRRZi8zYzhqV2FaNUVDbDd2Rk5VM1IvWWowVXdmRFNKQ1BrMXF5RFFsLy8K",
+      "replace": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERFQkM4QTVDMEVCMzZFNUMKUldSY2JyTU9YSXE4M3NWZUdGU2kxd1NFRXBwNXg3ZllnZDhQL3ZZcDdoZE85NGJsdDM3Y25CTWkK",
+      "why": "our minisign key; upstream's would reject every Voxflow update"
+    },
+    {
+      "file": "src-tauri/tauri.conf.json",
+      "find": "^\\s*\"signCommand\": \"trusted-signing-cli[^\\n]*\\n",
+      "replace": "",
+      "regex": true,
+      "done": "\"windows\"",
+      "why": "CJ Pais's signing account; not ours to use"
+    },
+    {
+      "file": "src-tauri/tauri.conf.json",
+      "find": "Based on Voxflow by CJ Pais.",
+      "replace": "Based on Handy by CJ Pais.",
+      "why": "credit the original app"
+    }
+  ],
+  "prepend": [
+    {
+      "file": "CLAUDE.md",
+      "marker": "<!-- Voxflow (rebrand/apply.py) -->",
+      "lines": [
+        "<!-- Voxflow (rebrand/apply.py) -->",
+        "# Voxflow",
+        "",
+        "This repository is **Voxflow**, a fork of [Handy](https://github.com/cjpais/Handy) with its own features on top. Read `docs/UPSTREAM.md` first. In short:",
+        "",
+        "- Voxflow's name, bundle id, updater endpoint and signing key are guarded by `rebrand/brand.json`: after merging upstream, run `python3 rebrand/apply.py` and `--check`.",
+        "- Shared Handy packages keep their names: `handy-keys`, `handy-recorder`, `@handy-computer/models`, the blob.handy.computer model URLs.",
+        "- Never push `upstream/*` tags, and never post to cjpais/Handy.",
+        ""
+      ]
+    }
+  ],
+  "append": [
+    {
+      "file": ".gitattributes",
+      "marker": "merge=ours",
+      "lines": [
+        "",
+        "# Voxflow (rebrand/apply.py): files we replace whole keep our version in a merge.",
+        "# Needs `git config merge.ours.driver true` once per clone (docs/UPSTREAM.md).",
+        "README.md merge=ours",
+        "src-tauri/icons/** merge=ours",
+        ".github/workflows/release.yml merge=ours"
+      ]
+    }
+  ]
+}

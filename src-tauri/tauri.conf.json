@@ -31,7 +31,7 @@
     "resources": ["resources/**/*"],
     "license": "MIT",
     "publisher": "Voxflow",
-    "copyright": "MIT License. Based on Voxflow by CJ Pais.",
+    "copyright": "MIT License. Based on Handy by CJ Pais.",
     "category": "Utility",
     "homepage": "https://github.com/reachneoagent-commits/voxflow",
     "shortDescription": "Offline voice dictation",
