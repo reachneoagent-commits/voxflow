@@ -203,14 +203,14 @@ Voxflow supports command-line parameters on all platforms for integration with s
 
 **Implementation:** `cli.rs` (definitions), `main.rs` (parsing), `lib.rs` (applying), `signal_handle.rs` (shared logic)
 
-| Flag                     | Description                                                |
-| ------------------------ | ---------------------------------------------------------- |
+| Flag                     | Description                                                 |
+| ------------------------ | ----------------------------------------------------------- |
 | `--toggle-transcription` | Toggle recording on/off; starts it if Voxflow isn't running |
-| `--toggle-post-process`  | Toggle recording with post-processing on/off               |
-| `--cancel`               | Cancel the current operation on a running instance         |
-| `--start-hidden`         | Launch without showing the main window (tray icon visible) |
-| `--no-tray`              | Launch without system tray (closing window quits the app)  |
-| `--debug`                | Enable debug mode with verbose (Trace) logging             |
+| `--toggle-post-process`  | Toggle recording with post-processing on/off                |
+| `--cancel`               | Cancel the current operation on a running instance          |
+| `--start-hidden`         | Launch without showing the main window (tray icon visible)  |
+| `--no-tray`              | Launch without system tray (closing window quits the app)   |
+| `--debug`                | Enable debug mode with verbose (Trace) logging              |
 
 **Key design decisions:**
 

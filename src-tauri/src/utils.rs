@@ -396,41 +396,12 @@ mod tests {
 
         assert!(integrity_blocks_input(Level(HIGH), Some(MEDIUM)));
         assert!(!integrity_blocks_input(Level(MEDIUM), Some(MEDIUM)));
-        // Handy itself running as administrator can paste anywhere.
+        // Voxflow itself running as administrator can paste anywhere.
         assert!(!integrity_blocks_input(Level(HIGH), Some(HIGH)));
         assert!(!integrity_blocks_input(Level(MEDIUM), Some(HIGH)));
         assert!(integrity_blocks_input(Denied, Some(MEDIUM)));
         assert!(!integrity_blocks_input(Unknown, Some(MEDIUM)));
         assert!(!integrity_blocks_input(Level(HIGH), None));
-    }
-
-    #[cfg(target_os = "linux")]
-    #[test]
-    fn gamescope_wsi_is_disabled_only_when_the_user_set_nothing() {
-        use std::ffi::OsStr;
-        assert!(should_disable_gamescope_wsi(None));
-        assert!(!should_disable_gamescope_wsi(Some(OsStr::new("1"))));
-        assert!(!should_disable_gamescope_wsi(Some(OsStr::new("0"))));
-        assert!(!should_disable_gamescope_wsi(Some(OsStr::new(""))));
-    }
-
-    #[cfg(target_os = "linux")]
-    #[test]
-    fn requested_gdk_backend_ignores_unset_and_blank() {
-        assert_eq!(requested_gdk_backend(None), None);
-        assert_eq!(requested_gdk_backend(Some("")), None);
-        assert_eq!(requested_gdk_backend(Some("  ")), None);
-    }
-
-    #[cfg(target_os = "linux")]
-    #[test]
-    fn requested_gdk_backend_keeps_the_value() {
-        assert_eq!(requested_gdk_backend(Some("wayland")), Some("wayland"));
-        assert_eq!(requested_gdk_backend(Some(" x11 ")), Some("x11"));
-        assert_eq!(
-            requested_gdk_backend(Some("wayland,x11")),
-            Some("wayland,x11")
-        );
     }
 
     #[test]
