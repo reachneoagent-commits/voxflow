@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/stores/noticeStore";
 import { useSettings } from "../../../hooks/useSettings";
 import { Button } from "../../ui/Button";
 import { Input } from "../../ui/Input";
@@ -55,13 +55,15 @@ const PhraseChips: React.FC<PhraseChipsProps> = ({
     const next = draft.trim().replace(/\s+/g, " ");
     if (!next) return;
     if (!/[\p{L}\p{N}]/u.test(next)) {
-      toast.error(t("settings.snippets.clipboard.phrases.error"));
+      notify({ title: t("settings.snippets.clipboard.phrases.error") });
       return;
     }
     if (phrases.some((p) => p.toLowerCase() === next.toLowerCase())) {
-      toast.error(
-        t("settings.snippets.clipboard.phrases.duplicate", { phrase: next }),
-      );
+      notify({
+        title: t("settings.snippets.clipboard.phrases.duplicate", {
+          phrase: next,
+        }),
+      });
       return;
     }
     onChange([...phrases, next]);

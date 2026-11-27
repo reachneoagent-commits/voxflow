@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/stores/noticeStore";
 import type { Snippet } from "@/bindings";
 import { useSettings } from "../../../hooks/useSettings";
 import { Button } from "../../ui/Button";
@@ -41,11 +41,11 @@ const SnippetEditor: React.FC<EditorProps> = ({
   const handleSave = () => {
     const cleanTrigger = normalizeTrigger(trigger);
     if (!/[\p{L}\p{N}]/u.test(cleanTrigger)) {
-      toast.error(t("settings.snippets.errors.triggerRequired"));
+      notify({ title: t("settings.snippets.errors.triggerRequired") });
       return;
     }
     if (!text.trim()) {
-      toast.error(t("settings.snippets.errors.textRequired"));
+      notify({ title: t("settings.snippets.errors.textRequired") });
       return;
     }
     const clash = existing.some(
@@ -54,9 +54,11 @@ const SnippetEditor: React.FC<EditorProps> = ({
         snippet.trigger.toLowerCase() === cleanTrigger.toLowerCase(),
     );
     if (clash) {
-      toast.error(
-        t("settings.snippets.errors.duplicate", { trigger: cleanTrigger }),
-      );
+      notify({
+        title: t("settings.snippets.errors.duplicate", {
+          trigger: cleanTrigger,
+        }),
+      });
       return;
     }
     onSave({

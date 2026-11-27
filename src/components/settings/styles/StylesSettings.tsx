@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/stores/noticeStore";
 import {
   commands,
   type ActiveApp,
@@ -84,7 +84,9 @@ export const StylesSettings: React.FC = () => {
     if (
       appStyles.some((s) => s.app_id.toLowerCase() === app.id.toLowerCase())
     ) {
-      toast.error(t("settings.styles.errors.duplicate", { app: app.name }));
+      notify({
+        title: t("settings.styles.errors.duplicate", { app: app.name }),
+      });
       return;
     }
     const next: AppStyle = {

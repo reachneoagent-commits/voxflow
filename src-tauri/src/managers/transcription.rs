@@ -14,6 +14,8 @@ use crate::language_detection::{
 };
 use crate::managers::audio::{create_smoothed_detector, AudioRecordingManager};
 use crate::managers::model::ModelManager;
+use crate::notices::{self, Notice, NoticeCode, NoticeSource};
+use crate::overlay;
 use crate::settings::{
     get_settings, AppSettings, ChineseScript, ModelUnloadTimeout, TranscribeAcceleratorSetting,
 };
@@ -628,7 +630,8 @@ impl TranscriptionManager {
                 device,
             })
             .map_err(|e| {
-                let error_msg = format!("Failed to load model {}: {}", model_id, e);
+                // The worker's error already says it failed to load.
+                let error_msg = e.to_string();
                 emit_loading_failed(&error_msg);
                 anyhow::anyhow!(error_msg)
             })?;
@@ -679,6 +682,12 @@ impl TranscriptionManager {
                 error: None,
             },
         );
+        // Only this code: the source's other notices aren't about the model.
+        for source in [NoticeSource::Dictation, NoticeSource::Model] {
+            for code in [NoticeCode::ModelLoadFailed, NoticeCode::NoModelSelected] {
+                notices::clear_matching(&self.app_handle, source, Some(code));
+            }
+        }
 
         let load_duration = load_start.elapsed();
         debug!(
@@ -689,16 +698,18 @@ impl TranscriptionManager {
         Ok(())
     }
 
-    /// Kicks off the model loading in a background thread if it's not already loaded
-    pub fn initiate_model_load(&self) {
+    /// Starts loading the model in the background unless it's loaded or
+    /// loading, and returns whether it did. Only a dictation sets
+    /// `raise_notice`: file jobs and Settings report their own failures.
+    pub fn initiate_model_load(&self, raise_notice: bool) -> bool {
         let mut is_loading = self.is_loading.lock().unwrap();
         if *is_loading {
-            return;
+            return false;
         }
 
         let reload_pending = self.reload_model_on_next_use.load(Ordering::Acquire);
         if !reload_pending && self.is_model_loaded() {
-            return;
+            return false;
         }
 
         *is_loading = true;
@@ -711,12 +722,54 @@ impl TranscriptionManager {
             }
             let settings = get_settings(&self_clone.app_handle);
             if let Err(e) = self_clone.load_model(&settings.selected_model) {
-                error!("Failed to load model: {}", e);
+                error!("Failed to load model {}: {}", settings.selected_model, e);
+                if raise_notice {
+                    self_clone.raise_model_load_failed(&settings.selected_model, &e);
+                }
             }
             let mut is_loading = self_clone.is_loading.lock().unwrap();
             *is_loading = false;
             self_clone.loading_condvar.notify_all();
         });
+        true
+    }
+
+    /// Ends when a model next loads.
+    pub fn model_load_notice(
+        &self,
+        model_id: &str,
+        error: &anyhow::Error,
+        source: NoticeSource,
+    ) -> Notice {
+        let detail = match self.model_manager.get_model_info(model_id) {
+            Some(model) => format!("{}: {error}", model.name),
+            None => error.to_string(),
+        };
+        Notice::new(NoticeCode::ModelLoadFailed, source).with_detail(detail)
+    }
+
+    pub fn raise_model_load_failed(&self, model_id: &str, error: &anyhow::Error) {
+        let notice = self.model_load_notice(model_id, error, NoticeSource::Dictation);
+        self.raise_dictation_notice(notice);
+    }
+
+    /// The selection is empty (its files were gone at startup), so there is
+    /// nothing to load. Ends when a model next loads.
+    pub fn raise_no_model_selected(&self) {
+        self.raise_dictation_notice(Notice::new(
+            NoticeCode::NoModelSelected,
+            NoticeSource::Dictation,
+        ));
+    }
+
+    fn raise_dictation_notice(&self, notice: Notice) {
+        // A recording in progress keeps the overlay; its transcription fails
+        // next and reports that itself.
+        if overlay::is_session_showing() {
+            notices::raise_without_overlay(&self.app_handle, notice);
+        } else {
+            notices::raise(&self.app_handle, notice);
+        }
     }
 
     pub fn get_current_model(&self) -> Option<String> {
@@ -1175,6 +1228,13 @@ impl TranscriptionManager {
                     self.forget_model_if_engine_dropped(active_model, &e.to_string());
                 }
             })
+            .map(|mut transcript| {
+                if echoes_vocabulary(&transcript.text, &run_options.vocabulary) {
+                    info!("The model returned the custom words, not speech; dropping them");
+                    transcript.text.clear();
+                }
+                transcript
+            })
     }
 }
 
@@ -1568,6 +1628,34 @@ fn vocabulary_for_model(supports_vocabulary: bool, custom_words: &[String]) -> V
     } else {
         Vec::new()
     }
+}
+
+/// Whether `text` is the custom words read back instead of a transcript. A
+/// model that takes them as a prompt can answer audio with no speech in it by
+/// repeating the list, or the end of it, in order.
+fn echoes_vocabulary(text: &str, vocabulary: &[String]) -> bool {
+    let words = |s: &str| -> Vec<String> {
+        s.split(|c: char| !c.is_alphanumeric())
+            .filter(|word| !word.is_empty())
+            .map(str::to_lowercase)
+            .collect()
+    };
+    let said = words(text);
+    // Walk the text once, finding the custom words in the order of the list.
+    let (mut at, mut found, mut covered) = (0, 0, 0);
+    for term in vocabulary.iter().map(|term| words(term)) {
+        if term.is_empty() {
+            continue;
+        }
+        if let Some(offset) = said[at..].windows(term.len()).position(|w| w == term) {
+            at += offset + term.len();
+            found += 1;
+            covered += term.len();
+        }
+    }
+    // A sentence that uses a few custom words is speech. Three or more of
+    // them in list order, with next to nothing else, is the list.
+    found >= 3 && covered * 4 >= said.len() * 3
 }
 
 struct TranscribeCppRunPlan {
@@ -2359,6 +2447,46 @@ mod tests {
             &supported,
         );
         assert_eq!(corrected, "i use Voxflow every day");
+    }
+
+    #[test]
+    fn custom_words_read_back_are_not_a_transcript() {
+        let words = [
+            "Handy",
+            "Qwen",
+            "VRAM",
+            "Claude",
+            "Opus",
+            "Codex",
+            "GPT-6.1 Sol",
+        ]
+        .map(String::from);
+
+        // The shapes Qwen3-ASR returned for recordings of room noise (#2498).
+        for echo in [
+            "Handy Qwen VRAM Claude Opus Codex GPT-6.1 Sol.",
+            "手 Handy Qwen VRAM Claude Opus Codex GPT-6.1 Sol.",
+            // Only the end of the list, as with a long one.
+            "Claude Opus Codex GPT-6.1 Sol",
+            // With a word of its own in front.
+            "Ich bin ein Handy Qwen VRAM Claude Opus Codex GPT-6.1 Sol",
+        ] {
+            assert!(echoes_vocabulary(echo, &words), "{echo}");
+        }
+
+        for speech in [
+            "",
+            "Okay.",
+            "I asked Claude to compare Opus and Codex on my Handy fork.",
+            // Too few of them to tell from someone saying them.
+            "Claude Opus",
+            "GPT-6.1 Sol",
+            // Not the order of the list.
+            "Codex, Opus, Claude",
+        ] {
+            assert!(!echoes_vocabulary(speech, &words), "{speech}");
+        }
+        assert!(!echoes_vocabulary("Handy Qwen VRAM", &[]));
     }
 }
 

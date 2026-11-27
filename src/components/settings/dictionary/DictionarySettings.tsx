@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/stores/noticeStore";
+import { isComposingKeyEvent } from "@/lib/utils/keyboard";
 import type { Replacement } from "@/bindings";
 import { useSettings } from "../../../hooks/useSettings";
 import { Button } from "../../ui/Button";
@@ -38,15 +39,15 @@ export const DictionarySettings: React.FC = () => {
     const phrase = clean(from);
     const replacement = to.trim();
     if (!/[\p{L}\p{N}]/u.test(phrase)) {
-      toast.error(t("settings.dictionary.errors.required"));
+      notify({ title: t("settings.dictionary.errors.required") });
       return;
     }
     const lower = phrase.toLowerCase();
     if (replacement) {
       if (replacements.some((r) => r.from.toLowerCase() === lower)) {
-        toast.error(
-          t("settings.dictionary.errors.duplicate", { word: phrase }),
-        );
+        notify({
+          title: t("settings.dictionary.errors.duplicate", { word: phrase }),
+        });
         return;
       }
       const next: Replacement = {
@@ -58,9 +59,9 @@ export const DictionarySettings: React.FC = () => {
       updateSetting("replacements", [...replacements, next]);
     } else {
       if (words.some((w) => w.toLowerCase() === lower)) {
-        toast.error(
-          t("settings.dictionary.errors.duplicate", { word: phrase }),
-        );
+        notify({
+          title: t("settings.dictionary.errors.duplicate", { word: phrase }),
+        });
         return;
       }
       updateSetting("custom_words", [...words, phrase]);
@@ -102,7 +103,9 @@ export const DictionarySettings: React.FC = () => {
           placeholder={t("settings.dictionary.add.word")}
           aria-label={t("settings.dictionary.add.word")}
           onChange={(e) => setFrom(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && add()}
+          onKeyDown={(e) =>
+            e.key === "Enter" && !isComposingKeyEvent(e.nativeEvent) && add()
+          }
         />
         <Input
           className="flex-1"
@@ -111,7 +114,9 @@ export const DictionarySettings: React.FC = () => {
           placeholder={t("settings.dictionary.add.replacement")}
           aria-label={t("settings.dictionary.add.replacement")}
           onChange={(e) => setTo(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && add()}
+          onKeyDown={(e) =>
+            e.key === "Enter" && !isComposingKeyEvent(e.nativeEvent) && add()
+          }
         />
         <Button
           variant="primary"

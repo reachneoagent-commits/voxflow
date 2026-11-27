@@ -236,6 +236,9 @@ pub enum KeyboardImplementation {
     Tauri,
     #[serde(alias = "handy_keys")]
     VoxflowKeys,
+    /// No built-in global shortcuts; trigger Voxflow via CLI flags or signals
+    /// (e.g. from a Wayland compositor keybinding).
+    None,
 }
 
 impl Default for KeyboardImplementation {
@@ -249,9 +252,12 @@ impl Default for KeyboardImplementation {
 
 impl Default for PasteMethod {
     fn default() -> Self {
-        // Default to CtrlV for macOS and Windows, Direct for Linux
+        // Default to CtrlV for macOS and Windows. On Linux, Shift+Insert pastes in
+        // terminals and GUI apps alike (Handy also puts the text on the primary
+        // selection, which terminals read), and unlike Direct typing it doesn't
+        // depend on the keyboard layout.
         #[cfg(target_os = "linux")]
-        return PasteMethod::Direct;
+        return PasteMethod::ShiftInsert;
         #[cfg(not(target_os = "linux"))]
         return PasteMethod::CtrlV;
     }
@@ -594,6 +600,11 @@ pub struct AppSettings {
     pub experimental_enabled: bool,
     #[serde(default)]
     pub lazy_stream_close: bool,
+    /// Experimental, macOS only: move a Bluetooth headset (AirPods) to this
+    /// Mac while recording, so its microphone does not return silence while
+    /// another Apple device is playing through it.
+    #[serde(default)]
+    pub airpods_mode: bool,
     #[serde(default)]
     pub keyboard_implementation: KeyboardImplementation,
     #[serde(default = "default_show_tray_icon")]
@@ -683,7 +694,7 @@ fn default_model() -> String {
     "".to_string()
 }
 
-const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 2;
+const CURRENT_SETTINGS_SCHEMA_VERSION: u32 = 3;
 
 fn default_settings_schema_version() -> u32 {
     CURRENT_SETTINGS_SCHEMA_VERSION
@@ -782,7 +793,13 @@ fn default_paste_delay_ms() -> u64 {
 }
 
 fn default_paste_delay_after_ms() -> u64 {
-    60
+    // Linux apps fetch the pasted text from Handy only when they handle the
+    // key, so restoring the old clipboard too soon pastes the old content
+    // (#502). Only new installs get this; existing settings keep their value.
+    #[cfg(target_os = "linux")]
+    return 500;
+    #[cfg(not(target_os = "linux"))]
+    return 60;
 }
 
 fn default_auto_submit() -> bool {
@@ -1061,7 +1078,7 @@ pub fn get_default_settings() -> AppSettings {
     #[cfg(target_os = "macos")]
     let default_shortcut = "option+space";
     #[cfg(target_os = "linux")]
-    let default_shortcut = "ctrl+space";
+    let default_shortcut = "ctrl+alt+space";
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     let default_shortcut = "alt+space";
 
@@ -1081,7 +1098,7 @@ pub fn get_default_settings() -> AppSettings {
     #[cfg(target_os = "macos")]
     let default_post_process_shortcut = "option+shift+space";
     #[cfg(target_os = "linux")]
-    let default_post_process_shortcut = "ctrl+shift+space";
+    let default_post_process_shortcut = "ctrl+alt+shift+space";
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     let default_post_process_shortcut = "alt+shift+space";
 
@@ -1169,6 +1186,7 @@ pub fn get_default_settings() -> AppSettings {
         theme: default_theme(),
         experimental_enabled: false,
         lazy_stream_close: false,
+        airpods_mode: false,
         keyboard_implementation: KeyboardImplementation::default(),
         show_tray_icon: default_show_tray_icon(),
         paste_delay_ms: default_paste_delay_ms(),
@@ -1458,6 +1476,23 @@ fn apply_settings_migrations(
         settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
         updated = true;
     }
+    if stored_schema_version < 3 {
+        // Linux's default clipboard restore delay went from 60ms to 500ms.
+        // Someone not pasting through the clipboard has never used the delay,
+        // so give them the new default for when they switch to Shift+Insert.
+        // People already pasting through the clipboard keep their value.
+        #[cfg(target_os = "linux")]
+        if settings.paste_delay_after_ms == 60
+            && !matches!(
+                settings.paste_method,
+                PasteMethod::CtrlV | PasteMethod::CtrlShiftV | PasteMethod::ShiftInsert
+            )
+        {
+            settings.paste_delay_after_ms = default_paste_delay_after_ms();
+        }
+        settings.settings_schema_version = CURRENT_SETTINGS_SCHEMA_VERSION;
+        updated = true;
+    }
 
     // The generic GPU choice was removed in favor of Auto or an exact device.
     // Normalize settings created by builds that exposed that short-lived option.
@@ -1662,32 +1697,6 @@ pub fn get_recording_retention_period(app: &AppHandle) -> RecordingRetentionPeri
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn linux_self_update_possible_depends_on_bundle_and_tool() {
-        let all = |_: &str| true;
-        let none = |_: &str| false;
-        let only = |want: &'static str| move |name: &str| name == want;
-
-        assert!(linux_self_update_possible(Some(BundleKind::AppImage), none));
-        assert!(linux_self_update_possible(Some(BundleKind::Deb), all));
-        assert!(linux_self_update_possible(
-            Some(BundleKind::Deb),
-            only("dpkg")
-        ));
-        assert!(!linux_self_update_possible(Some(BundleKind::Deb), none));
-        assert!(!linux_self_update_possible(
-            Some(BundleKind::Deb),
-            only("rpm")
-        ));
-        assert!(linux_self_update_possible(
-            Some(BundleKind::Rpm),
-            only("rpm")
-        ));
-        assert!(!linux_self_update_possible(Some(BundleKind::Rpm), none));
-        assert!(!linux_self_update_possible(Some(BundleKind::Other), all));
-        assert!(!linux_self_update_possible(None, all));
-    }
 
     #[test]
     fn stored_binding_returns_the_requested_binding() {
@@ -1905,6 +1914,20 @@ mod tests {
         assert_eq!(salvaged.paste_delay_ms, default_paste_delay_ms());
         assert_eq!(salvaged.sound_theme, default_sound_theme());
         assert_eq!(salvaged.custom_words, vec!["voxflow".to_string()]);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn default_shortcuts_do_not_conflict_with_ibus_input_method_switch() {
+        let defaults = get_default_settings();
+        assert_eq!(
+            defaults.bindings["transcribe"].current_binding,
+            "ctrl+alt+space"
+        );
+        assert_eq!(
+            defaults.bindings["transcribe_with_post_process"].current_binding,
+            "ctrl+alt+shift+space",
+        );
     }
 
     #[test]
@@ -2295,5 +2318,35 @@ mod tests {
         let out = format!("{:?}", map);
         assert!(!out.contains("secret"));
         assert!(out.contains("[REDACTED]"));
+    }
+
+    #[test]
+    fn linux_self_update_possible_depends_on_bundle_and_tool() {
+        let all = |_: &str| true;
+        let none = |_: &str| false;
+        let only = |want: &'static str| move |name: &str| name == want;
+
+        assert!(linux_self_update_possible(Some(BundleKind::AppImage), none));
+        assert!(linux_self_update_possible(Some(BundleKind::Deb), all));
+        assert!(linux_self_update_possible(
+            Some(BundleKind::Deb),
+            only("dpkg")
+        ));
+        assert!(!linux_self_update_possible(Some(BundleKind::Deb), none));
+        assert!(!linux_self_update_possible(
+            Some(BundleKind::Deb),
+            only("rpm")
+        ));
+        assert!(linux_self_update_possible(
+            Some(BundleKind::Rpm),
+            only("rpm")
+        ));
+        assert!(!linux_self_update_possible(Some(BundleKind::Rpm), none));
+        assert!(!linux_self_update_possible(
+            Some(BundleKind::Rpm),
+            only("dpkg")
+        ));
+        assert!(!linux_self_update_possible(Some(BundleKind::Other), all));
+        assert!(!linux_self_update_possible(None, all));
     }
 }
