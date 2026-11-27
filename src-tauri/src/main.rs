@@ -12,15 +12,7 @@ fn main() {
     #[cfg(target_os = "linux")]
     voxflow_app_lib::apply_voxflow_gdk_backend();
 
-    #[cfg(target_os = "linux")]
-    {
-        // DMABUF renderer causes crashes on various GPU/display server configurations
-        // See: https://github.com/tauri-apps/tauri/issues/9394
-        // Preserve explicit overrides so affected users can opt out with =0 (#2166).
-        if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
-            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
-        }
-    }
+    voxflow_app_lib::webkit_renderer::apply();
 
     #[cfg(target_os = "windows")]
     {

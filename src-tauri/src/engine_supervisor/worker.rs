@@ -353,7 +353,9 @@ fn load(
 
 /// Debug-build fault injection for exercising crash/hang recovery:
 /// `VOXFLOW_WORKER_FAULT=<abort|segv|hang|backend>@<init|list|load|run|feed|finalize>`
-/// (`abort` is what `GGML_ASSERT` ends in, `segv` a real invalid memory write)
+/// (`abort` is what `GGML_ASSERT` ends in, `segv` a real invalid memory write,
+/// `backend` a backend error such as a lost device, which returns true so the
+/// caller answers with it; only at `run`, `feed` and `finalize`)
 /// (`init` is backend registration, before the hello). With `VOXFLOW_WORKER_FAULT_ONCE=<marker
 /// path>` it fires only in the first worker to reach that stage (the marker
 /// file records that it fired). With `VOXFLOW_WORKER_FAULT_GPU_ONLY=1` it fires

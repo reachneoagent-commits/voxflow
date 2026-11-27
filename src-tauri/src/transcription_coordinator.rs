@@ -174,7 +174,7 @@ struct InputEvent {
     /// initializing the microphone; a release queued behind that block must
     /// still be measured from the real key-up, or a short tap classifies as
     /// a hold and the just-started recording stops with zero samples
-    /// (Handy #2089, #2097). The loop passes this as the `now` of `on_input`.
+    /// (Handy #2089). The loop passes this as the `now` of `on_input`.
     received_at: Instant,
 }
 
@@ -617,7 +617,7 @@ impl TranscriptionCoordinator {
                             // Hold durations are measured edge-to-edge via the
                             // sender's stamp, so time spent blocked in a prior
                             // effect (first-activation mic init) cannot turn a
-                            // tap into a hold.
+                            // tap into a hold (Handy #2089).
                             let now = input.received_at;
                             if let Some(effect) = state.on_input(input, now) {
                                 run_effect(&app, &mut state, effect);
@@ -1354,11 +1354,16 @@ mod tests {
         assert_eq!(state.stage, Stage::Idle);
     }
 
-    /// Regression for Handy #2089: the first activation after startup blocks
-    /// the coordinator thread in `Effect::Start` while the microphone
-    /// initializes. A short tap whose release is queued behind that block must
-    /// still classify as a tap, so the hold is measured from the sender's
-    /// `received_at` stamps (edge-to-edge), never from the dequeue time.
+    /// Regression for Handy #2089: the first activation after startup blocks the
+    /// coordinator thread in `Effect::Start` while the microphone initializes
+    /// (~400ms in the report). A short tap whose release is queued behind
+    /// that block must still classify as a tap. The loop therefore measures
+    /// the hold from the sender's `received_at` stamps (edge-to-edge), never
+    /// from its own dequeue time; this drives the machine with exactly those
+    /// stamps. Before the fix the release was stamped at dequeue — after the
+    /// init — so a 150ms tap measured past the 300ms threshold, the
+    /// just-started recording stopped on the spot, and the transcription
+    /// came back empty.
     #[test]
     fn auto_mode_tap_survives_first_activation_start_latency() {
         let mode = ShortcutActivation::HoldOrToggle;
@@ -1372,8 +1377,9 @@ mod tests {
             Some(Effect::Start { .. })
         ));
 
-        // The key really goes up 150ms in; the release carries the edge time,
-        // not the much later dequeue time.
+        // The user taps: the key really goes up 150ms in, while the
+        // coordinator is still blocked initializing the microphone. The
+        // release carries the edge time, not the much later dequeue time.
         let mut release = input(mode, false);
         release.received_at = t0 + ms(150);
         assert!(state.on_input(release, t0 + ms(150)).is_none());
@@ -1384,6 +1390,8 @@ mod tests {
         assert_eq!(state.stage, Stage::Recording(BINDING.to_string()));
         assert!(state.is_locked(), "the tap must lock the session on");
 
+        // The next press — long after the drain of that empty start — is what
+        // ends the session, per tap semantics.
         let mut stop_press = input(mode, true);
         stop_press.received_at = t0 + ms(5000);
         assert!(matches!(

@@ -1,1 +1,7 @@
 src-tauri/src/catalog/catalog.json -text
+
+# Voxflow (rebrand/apply.py): files we replace whole keep our version in a merge.
+# Needs `git config merge.ours.driver true` once per clone (docs/UPSTREAM.md).
+README.md merge=ours
+src-tauri/icons/** merge=ours
+.github/workflows/release.yml merge=ours

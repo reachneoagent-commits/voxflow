@@ -31,7 +31,7 @@
     "resources": ["resources/**/*"],
     "license": "MIT",
     "publisher": "Voxflow",
-    "copyright": "MIT License. Based on Voxflow by CJ Pais.",
+    "copyright": "MIT License. Based on Handy by CJ Pais.",
     "category": "Utility",
     "homepage": "https://github.com/reachneoagent-commits/voxflow",
     "shortDescription": "Offline voice dictation",
@@ -52,20 +52,13 @@
     },
     "linux": {
       "deb": {
-        "depends": [
-          "libgtk-layer-shell0",
-          "libopenblas0",
-          "libssl3t64 | libssl3"
-        ],
+        "depends": ["libgtk-layer-shell0", "libssl3t64 | libssl3"],
         "files": {
           "/usr/lib/Voxflow": "transcribe-libs"
         }
       },
       "rpm": {
-        "depends": [
-          "libgtk-layer-shell.so.0()(64bit)",
-          "libopenblas.so.0()(64bit)"
-        ],
+        "depends": ["libgtk-layer-shell.so.0()(64bit)"],
         "compression": {
           "type": "none"
         },
